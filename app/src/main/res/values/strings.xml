@@ -127,6 +127,7 @@
     <string name="logs_source_module_service">Module service</string>
     <string name="logs_source_module_loader">Module loader</string>
     <string name="logs_source_app_filter">App-list filter</string>
+    <string name="logs_source_activity_filter">App launch protection</string>
     <string name="logs_source_data_isolation">App data isolation</string>
     <string name="logs_source_other">Other</string>
     <string name="logs_event_data_ready">The system service prepared its runtime data.</string>
@@ -158,12 +159,15 @@
     <string name="logs_event_filtered_query">%1$s tried to read the app list. Hidden apps were filtered out.</string>
     <string name="logs_event_filtered_archive">%1$s tried to query archived packages. The hidden app record was filtered out.</string>
     <string name="logs_event_filter_detail">%1$s requested information about %2$s. The hidden entry was filtered.</string>
+    <string name="logs_event_filtered_activity">%1$s tried to open or resolve a hidden app. The attempt was blocked.</string>
     <string name="logs_filter_all">All records</string>
     <string name="logs_filter_issues">Warnings and errors</string>
 
     <!-- Settings -->
     <string name="settings_detail_log">Detail log for debugging</string>
     <string name="settings_detail_log_summary">Record additional diagnostic details. This increases log size.</string>
+    <string name="settings_activity_launch_protection">App launch protection</string>
+    <string name="settings_activity_launch_protection_summary">Blocks detector apps from opening hidden apps. Turn off if an app cannot open</string>
     <string name="settings_hide_icon">Hide module icon in launcher</string>
     <string name="settings_hide_icon_summary">You can still open the app in Xposed manager</string>
 

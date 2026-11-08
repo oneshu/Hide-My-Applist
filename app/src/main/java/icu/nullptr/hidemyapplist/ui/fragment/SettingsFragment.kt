@@ -48,6 +48,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         override fun getBoolean(key: String, defValue: Boolean): Boolean {
             return when (key) {
                 "detailLog" -> ConfigManager.detailLog
+                "activityLaunchProtection" -> ConfigManager.activityLaunchProtection
                 "hideIcon" -> PrefManager.hideIcon
                 else -> throw IllegalArgumentException("Invalid key: $key")
             }
@@ -64,6 +65,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         override fun putBoolean(key: String, value: Boolean) {
             when (key) {
                 "detailLog" -> ConfigManager.detailLog = value
+                "activityLaunchProtection" -> ConfigManager.activityLaunchProtection = value
                 "hideIcon" -> PrefManager.hideIcon = value
                 else -> throw IllegalArgumentException("Invalid key: $key")
             }

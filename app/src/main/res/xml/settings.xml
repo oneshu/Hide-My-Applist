@@ -28,6 +28,12 @@
             android:key="detailLog"
             android:summary="@string/settings_detail_log_summary"
             android:title="@string/settings_detail_log" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:icon="@drawable/outline_android_24"
+            android:key="activityLaunchProtection"
+            android:summary="@string/settings_activity_launch_protection_summary"
+            android:title="@string/settings_activity_launch_protection" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/settings_about">

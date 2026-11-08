@@ -51,6 +51,12 @@ object Utils {
         }.getOrNull()
     }
 
+    fun getAppIdFromPackageSettings(packageSettings: Any): Int? {
+        return runCatching {
+            packageSettings.javaClass.getMethod("getAppId").invoke(packageSettings) as? Int
+        }.getOrNull()
+    }
+
     fun getInstalledApplicationsCompat(pms: IPackageManager, flags: Long, userId: Int): List<ApplicationInfo> {
         return pms.getInstalledApplications(flags, userId).list
     }

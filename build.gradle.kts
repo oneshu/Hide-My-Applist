@@ -23,7 +23,7 @@ val androidSdkVer by extra(36)
 
 val appVerName by extra("3.4")
 val configVerCode by extra(90)
-val serviceVerCode by extra(97)
+val serviceVerCode by extra(98)
 val minBackupVerCode by extra(65)
 
 val androidSourceCompatibility = JavaVersion.VERSION_21

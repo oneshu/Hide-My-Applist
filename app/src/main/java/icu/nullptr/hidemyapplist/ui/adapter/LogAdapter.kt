@@ -57,6 +57,7 @@ class LogAdapter(private val context: Context) : RecyclerView.Adapter<LogAdapter
                 "HMA-UserService" -> R.string.logs_source_module_service
                 "HMA-XposedEntry" -> R.string.logs_source_module_loader
                 "PmsHookTarget36" -> R.string.logs_source_app_filter
+                "ActivityHook" -> R.string.logs_source_activity_filter
                 "PlatformCompatHook" -> R.string.logs_source_data_isolation
                 else -> R.string.logs_source_other
             }
@@ -66,22 +67,22 @@ class LogAdapter(private val context: Context) : RecyclerView.Adapter<LogAdapter
     private fun formatMessage(logItem: LogItem): String {
         val line = logItem.message.lineSequence().first().trim()
         val queryFrom = Regex(
-            """@(shouldFilterApplication|getArchivedPackageInternal): query from ($PACKAGE_PATTERN)"""
+            """@(shouldFilterApplication|getArchivedPackageInternal|applyPostResolutionFilter): query from ($PACKAGE_PATTERN)"""
         ).find(line)
         if (queryFrom != null) {
             val caller = resolveAppLabel(queryFrom.groupValues[2])
             return context.getString(
-                if (queryFrom.groupValues[1] == "shouldFilterApplication") {
-                    R.string.logs_event_filtered_query
-                } else {
-                    R.string.logs_event_filtered_archive
+                when (queryFrom.groupValues[1]) {
+                    "shouldFilterApplication" -> R.string.logs_event_filtered_query
+                    "getArchivedPackageInternal" -> R.string.logs_event_filtered_archive
+                    else -> R.string.logs_event_filtered_activity
                 },
                 caller
             )
         }
 
         val filterDetail = Regex(
-            """@(shouldFilterApplication|getArchivedPackageInternal) caller: \d+ ($PACKAGE_PATTERN), target: ($PACKAGE_PATTERN)"""
+            """@(shouldFilterApplication|getArchivedPackageInternal|applyPostResolutionFilter) caller: \d+ ($PACKAGE_PATTERN), target: ($PACKAGE_PATTERN)"""
         ).find(line)
         if (filterDetail != null) {
             return context.getString(

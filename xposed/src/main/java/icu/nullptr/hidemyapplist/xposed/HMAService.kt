@@ -35,8 +35,9 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
 
     private val filterCount = AtomicInteger(0)
 
-    fun incrementFilterCount() {
-        val count = filterCount.incrementAndGet()
+    fun incrementFilterCount(amount: Int = 1) {
+        if (amount <= 0) return
+        val count = filterCount.addAndGet(amount)
         if (count % 100 == 0) {
             synchronized(configLock) {
                 runCatching {
@@ -127,6 +128,7 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
         }
 
         frameworkHooks.add(PmsHookTarget36(this))
+        frameworkHooks.add(ActivityHook(this))
         frameworkHooks.add(PlatformCompatHook(this))
 
         frameworkHooks.forEach(IFrameworkHook::load)
@@ -150,6 +152,10 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
         }
 
         return appConfig.useWhitelist
+    }
+
+    fun shouldHideActivityLaunch(caller: String?, query: String?): Boolean {
+        return config.activityLaunchProtection && shouldHide(caller, query)
     }
 
     fun addLog(logEntry: String) {

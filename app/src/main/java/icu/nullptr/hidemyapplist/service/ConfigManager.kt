@@ -78,6 +78,13 @@ object ConfigManager {
             saveConfig()
         }
 
+    var activityLaunchProtection: Boolean
+        get() = config.activityLaunchProtection
+        set(value) {
+            config.activityLaunchProtection = value
+            saveConfig()
+        }
+
     fun hasTemplate(name: String?): Boolean {
         return config.templates.containsKey(name)
     }

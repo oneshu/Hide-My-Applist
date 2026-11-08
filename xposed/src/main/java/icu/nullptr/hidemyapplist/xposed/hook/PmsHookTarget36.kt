@@ -1,6 +1,8 @@
 package icu.nullptr.hidemyapplist.xposed.hook
 
 import android.os.Binder
+import android.os.Process
+import android.os.UserHandle
 import com.github.kyuubiran.ezxhelper.utils.findMethod
 import com.github.kyuubiran.ezxhelper.utils.hookBefore
 import de.robv.android.xposed.XC_MethodHook
@@ -37,7 +39,12 @@ class PmsHookTarget36(private val service: HMAService) : IFrameworkHook {
             runCatching {
                 val snapshot = param.args[0]
                 val callingUid = param.args[1] as Int
-                if (callingUid == Constants.UID_SYSTEM) return@hookBefore
+                val callingAppId = UserHandle.getAppId(callingUid)
+                val targetAppId = Utils.getAppIdFromPackageSettings(param.args[3])
+                if (callingAppId < Process.FIRST_APPLICATION_UID ||
+                    targetAppId != null && targetAppId < Process.FIRST_APPLICATION_UID ||
+                    callingAppId == targetAppId
+                ) return@hookBefore
                 val callingPackages = Utils.binderLocalScope {
                     getPackagesForUidMethod.invoke(snapshot, callingUid) as Array<String>?
                 } ?: return@hookBefore
@@ -70,6 +77,22 @@ class PmsHookTarget36(private val service: HMAService) : IFrameworkHook {
                         service.pms.getPackagesForUid(callingUid)
                     } ?: return@hookBefore
                     val targetPackage = param.args[0].toString()
+                    val callingAppId = UserHandle.getAppId(callingUid)
+                    val targetUid = Utils.binderLocalScope {
+                        runCatching {
+                            service.pms.getPackageUid(
+                                targetPackage,
+                                0,
+                                UserHandle.getUserId(callingUid)
+                            )
+                        }.getOrNull()
+                    }
+                    val targetAppId = targetUid?.let(UserHandle::getAppId)
+                    if (callingAppId < Process.FIRST_APPLICATION_UID ||
+                        targetAppId != null && targetAppId < Process.FIRST_APPLICATION_UID ||
+                        callingAppId == targetAppId ||
+                        targetPackage in callingPackages
+                    ) return@hookBefore
                     for (caller in callingPackages) {
                         if (service.shouldHide(caller, targetPackage)) {
                             param.result = null

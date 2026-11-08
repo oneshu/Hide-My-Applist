@@ -120,6 +120,7 @@
     <string name="logs_source_module_service">模块服务</string>
     <string name="logs_source_module_loader">模块加载</string>
     <string name="logs_source_app_filter">应用列表拦截</string>
+    <string name="logs_source_activity_filter">应用启动保护</string>
     <string name="logs_source_data_isolation">应用数据隔离</string>
     <string name="logs_source_other">其他</string>
     <string name="logs_event_data_ready">系统服务已准备好运行数据。</string>
@@ -151,11 +152,14 @@
     <string name="logs_event_filtered_query">%1$s 尝试读取应用列表，其中的隐藏应用已被过滤。</string>
     <string name="logs_event_filtered_archive">%1$s 尝试查询历史安装记录，隐藏应用的信息已被过滤。</string>
     <string name="logs_event_filter_detail">%1$s 请求了 %2$s 的信息，隐藏项已被过滤。</string>
+    <string name="logs_event_filtered_activity">%1$s 尝试打开或解析隐藏应用，已被拦截。</string>
     <string name="logs_filter_all">全部记录</string>
     <string name="logs_filter_issues">仅警告和错误</string>
     <!-- Settings -->
     <string name="settings_detail_log">详细日志</string>
     <string name="settings_detail_log_summary">记录更多诊断信息，同时会增加日志占用</string>
+    <string name="settings_activity_launch_protection">应用启动保护</string>
+    <string name="settings_activity_launch_protection_summary">阻止检测工具打开隐藏应用；出现兼容问题时可关闭</string>
     <string name="settings_hide_icon">在启动器中隐藏图标</string>
     <string name="settings_hide_icon_summary">你仍然可以在 Xposed 管理器中打开此应用</string>
     <string name="settings_language">语言</string>
