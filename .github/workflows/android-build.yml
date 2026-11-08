@@ -4,14 +4,6 @@ on:
   push:
   pull_request:
   workflow_dispatch:
-    inputs:
-      build_type:
-        description: Build type
-        required: true
-        default: release
-        type: choice
-        options:
-          - release
 
 permissions:
   contents: read
@@ -22,7 +14,7 @@ concurrency:
 
 jobs:
   build:
-    name: ${{ github.event_name == 'workflow_dispatch' && 'Release APK' || 'Debug APK' }}
+    name: Release APK
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -78,25 +70,10 @@ jobs:
       - name: Prebuild
         run: ./gradlew prebuild --no-daemon --stacktrace
 
-      - name: Build debug APK
-        if: github.event_name != 'workflow_dispatch'
-        run: ./gradlew :app:buildDebug --no-daemon --stacktrace
-
       - name: Build release APK
-        if: github.event_name == 'workflow_dispatch'
         run: ./gradlew :app:buildRelease --no-daemon --stacktrace
 
-      - name: Upload debug APK
-        if: github.event_name != 'workflow_dispatch'
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: hide-my-applist-debug-${{ github.sha }}
-          path: app/build/apk/debug/HMA*-debug.apk
-          if-no-files-found: error
-          retention-days: 14
-
       - name: Upload release APK
-        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: hide-my-applist-release-${{ github.sha }}
