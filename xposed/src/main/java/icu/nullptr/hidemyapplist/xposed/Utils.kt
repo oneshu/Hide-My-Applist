@@ -12,6 +12,12 @@ import java.util.*
 
 object Utils {
 
+    private const val PER_USER_RANGE = 100_000
+
+    fun getAppId(uid: Int): Int = uid % PER_USER_RANGE
+
+    fun getUserId(uid: Int): Int = uid / PER_USER_RANGE
+
     fun generateRandomString(length: Int): String {
         val leftLimit = 97   // letter 'a'
         val rightLimit = 122 // letter 'z'

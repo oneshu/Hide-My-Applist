@@ -2,7 +2,6 @@ package icu.nullptr.hidemyapplist.xposed.hook
 
 import android.content.pm.ResolveInfo
 import android.os.Process
-import android.os.UserHandle
 import com.github.kyuubiran.ezxhelper.utils.findMethod
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
@@ -57,7 +56,7 @@ class ActivityHook(private val service: HMAService) : IFrameworkHook {
         if (results.isEmpty()) return
 
         val callingUid = param.args.getOrNull(3) as? Int ?: return
-        val callingAppId = UserHandle.getAppId(callingUid)
+        val callingAppId = Utils.getAppId(callingUid)
         if (callingAppId < Process.FIRST_APPLICATION_UID) return
 
         val callingPackages = Utils.binderLocalScope {
