@@ -29,6 +29,19 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Create debug keystore
+        run: |
+          mkdir -p "$HOME/.config/.android"
+          keytool -genkeypair \
+            -keystore "$HOME/.config/.android/debug.keystore" \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+
       - name: Write properties
         run: |
           echo buildWithGitSuffix=true >> local.properties
