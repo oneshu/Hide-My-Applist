@@ -54,7 +54,7 @@ jobs:
       - name: Build debug
         id: buildDebug
         run: |
-          ./gradlew :app:assembleDebug
+          ./gradlew :app:buildDebug
           echo "debugName=$(ls app/build/apk/debug/HMA*-debug.apk | awk -F '(/|.apk)' '{print $5}')" >> $GITHUB_OUTPUT
 
       - name: Upload debug APK
