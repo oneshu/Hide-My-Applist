@@ -54,9 +54,9 @@ jobs:
           echo "buildWithGitSuffix=true" > local.properties
           echo "org.gradle.jvmargs=-Xmx2048m" >> gradle.properties
           echo "org.gradle.java.installations.paths=${{ steps.java21.outputs.path }}" >> gradle.properties
-          mkdir -p "$HOME/.android"
+          mkdir -p "$HOME/.config/.android"
           keytool -genkeypair \
-            -keystore "$HOME/.android/debug.keystore" \
+            -keystore "$HOME/.config/.android/debug.keystore" \
             -storepass android \
             -alias androiddebugkey \
             -keypass android \
