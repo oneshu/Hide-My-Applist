@@ -1,0 +1,105 @@
+name: Android Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: Build type
+        required: true
+        default: release
+        type: choice
+        options:
+          - release
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ github.event_name == 'workflow_dispatch' && 'Release APK' || 'Debug APK' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@7ca78c16c887dc6c5f36fd6d0cb0f5c23d940e69 # v6
+
+      - name: Set up JDK 21 toolchain
+        id: java21
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up JDK 25 for Gradle
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Configure build environment
+        run: |
+          echo "buildWithGitSuffix=true" > local.properties
+          echo "org.gradle.jvmargs=-Xmx2048m" >> gradle.properties
+          echo "org.gradle.java.installations.paths=${{ steps.java21.outputs.path }}" >> gradle.properties
+          mkdir -p "$HOME/.android"
+          keytool -genkeypair \
+            -keystore "$HOME/.android/debug.keystore" \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Cache Gradle
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', 'gradle/**', 'gradle.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Prebuild
+        run: ./gradlew prebuild --no-daemon --stacktrace
+
+      - name: Build debug APK
+        if: github.event_name != 'workflow_dispatch'
+        run: ./gradlew :app:buildDebug --no-daemon --stacktrace
+
+      - name: Build release APK
+        if: github.event_name == 'workflow_dispatch'
+        run: ./gradlew :app:buildRelease --no-daemon --stacktrace
+
+      - name: Upload debug APK
+        if: github.event_name != 'workflow_dispatch'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: hide-my-applist-debug-${{ github.sha }}
+          path: app/build/apk/debug/HMA*-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload release APK
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: hide-my-applist-release-${{ github.sha }}
+          path: app/build/apk/release/HMA*-release.apk
+          if-no-files-found: error
+          retention-days: 14
