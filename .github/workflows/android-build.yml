@@ -4,6 +4,12 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: Publish the built APK as a GitHub Release
+        required: true
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -80,3 +86,44 @@ jobs:
           path: app/build/apk/release/HMA*-release.apk
           if-no-files-found: error
           retention-days: 14
+
+  release:
+    name: Publish GitHub Release
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_release
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download release APK artifact
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: hide-my-applist-release-${{ github.sha }}
+          path: release
+
+      - name: Publish APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          apk="$(find release -type f -name 'HMA*-release.apk' -print -quit)"
+          test -n "$apk"
+
+          apk_name="$(basename "$apk")"
+          tag="$(printf '%s\n' "$apk_name" | sed -E 's/^HMA-V([0-9]+(\.[0-9]+)*)\.r([0-9]+)\..*-release\.apk$/v\1-r\3/')"
+          test "$tag" != "$apk_name"
+
+          title="$tag ($(git rev-parse --short=7 "$GITHUB_SHA"))"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$apk" --clobber
+          else
+            gh release create "$tag" "$apk" \
+              --target "$GITHUB_SHA" \
+              --title "$title" \
+              --generate-notes
+          fi
+
+          echo "Published $apk_name to release $tag"
