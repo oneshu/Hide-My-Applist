@@ -1,11 +1,9 @@
 package icu.nullptr.hidemyapplist.ui.fragment
 
-import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import androidx.preference.Preference
@@ -213,14 +211,6 @@ class SettingsFragment : Fragment(R.layout.fragment_settings), PreferenceFragmen
                     LocaleDelegate.defaultLocale = locale
                     hmaApp.resources.updateConfiguration(config, resources.displayMetrics)
                     activity?.recreate()
-                    true
-                }
-            }
-
-            findPreference<Preference>("translation")?.let {
-                it.summary = getString(R.string.settings_translate_summary, getString(R.string.app_name))
-                it.setOnPreferenceClickListener {
-                    startActivity(Intent(Intent.ACTION_VIEW, Constants.TRANSLATE_URL.toUri()))
                     true
                 }
             }

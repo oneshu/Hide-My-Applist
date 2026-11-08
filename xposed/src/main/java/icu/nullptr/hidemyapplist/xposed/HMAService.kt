@@ -102,7 +102,7 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
                 it.writeText("0")
             }
         }
-        if (!atomicConfigFile.exists()) {
+        if (!configFile.exists()) {
             logI(TAG, "Config file not found")
             return
         }

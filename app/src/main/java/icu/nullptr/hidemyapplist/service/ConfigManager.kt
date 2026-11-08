@@ -19,7 +19,7 @@ object ConfigManager {
     private val atomicConfigFile by lazy { AtomicFile(configFile) }
 
     fun init() {
-        if (!atomicConfigFile.exists()) {
+        if (!configFile.exists()) {
             writeConfigFile(JsonConfig().toString())
         }
         runCatching {
