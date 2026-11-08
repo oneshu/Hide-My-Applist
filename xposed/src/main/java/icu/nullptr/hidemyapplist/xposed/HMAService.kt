@@ -2,10 +2,11 @@ package icu.nullptr.hidemyapplist.xposed
 
 import android.content.pm.ApplicationInfo
 import android.content.pm.IPackageManager
-import android.os.Build
+import android.util.AtomicFile
 import icu.nullptr.hidemyapplist.common.*
 import icu.nullptr.hidemyapplist.xposed.hook.*
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 
 class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
 
@@ -19,6 +20,7 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
 
     private lateinit var dataDir: String
     private lateinit var configFile: File
+    private lateinit var atomicConfigFile: AtomicFile
     private lateinit var logFile: File
     private lateinit var oldLogFile: File
 
@@ -27,19 +29,24 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
     private val systemApps = mutableSetOf<String>()
     private val frameworkHooks = mutableSetOf<IFrameworkHook>()
 
+    @Volatile
     var config = JsonConfig().apply { detailLog = true }
         private set
 
-    var filterCount = 0
-        @JvmName("getFilterCountInternal") get
-        set(value) {
-            field = value
-            if (field % 100 == 0) {
-                synchronized(configLock) {
-                    File("$dataDir/filter_count").writeText(field.toString())
+    private val filterCount = AtomicInteger(0)
+
+    fun incrementFilterCount() {
+        val count = filterCount.incrementAndGet()
+        if (count % 100 == 0) {
+            synchronized(configLock) {
+                runCatching {
+                    File("$dataDir/filter_count").writeText(count.toString())
+                }.onFailure {
+                    logW(TAG, "Failed to persist filter count", it)
                 }
             }
         }
+    }
 
     init {
         searchDataDir()
@@ -76,6 +83,7 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
 
         File("$dataDir/log").mkdirs()
         configFile = File("$dataDir/config.json")
+        atomicConfigFile = AtomicFile(configFile)
         logFile = File("$dataDir/log/runtime.log")
         oldLogFile = File("$dataDir/log/old.log")
         logFile.renameTo(oldLogFile)
@@ -88,18 +96,18 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
     private fun loadConfig() {
         File("$dataDir/filter_count").also {
             runCatching {
-                if (it.exists()) filterCount = it.readText().toInt()
+                if (it.exists()) filterCount.set(it.readText().toInt())
             }.onFailure { e ->
                 logW(TAG, "Failed to load filter count, set to 0", e)
                 it.writeText("0")
             }
         }
-        if (!configFile.exists()) {
+        if (!atomicConfigFile.exists()) {
             logI(TAG, "Config file not found")
             return
         }
         val loading = runCatching {
-            val json = configFile.readText()
+            val json = atomicConfigFile.readFully().decodeToString()
             JsonConfig.parse(json)
         }.getOrElse {
             logE(TAG, "Failed to parse config.json", it)
@@ -118,19 +126,8 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
             if (it.flags and ApplicationInfo.FLAG_SYSTEM != 0) it.packageName else null
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            frameworkHooks.add(PmsHookTarget34(this))
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            frameworkHooks.add(PmsHookTarget33(this))
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            frameworkHooks.add(PmsHookTarget30(this))
-        } else {
-            frameworkHooks.add(PmsHookTarget28(this))
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            frameworkHooks.add(PlatformCompatHook(this))
-        }
+        frameworkHooks.add(PmsHookTarget36(this))
+        frameworkHooks.add(PlatformCompatHook(this))
 
         frameworkHooks.forEach(IFrameworkHook::load)
         logI(TAG, "Hooks installed")
@@ -148,7 +145,7 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
 
         if (query in appConfig.extraAppList) return !appConfig.useWhitelist
         for (tplName in appConfig.applyTemplates) {
-            val tpl = config.templates[tplName]!!
+            val tpl = config.templates[tplName] ?: continue
             if (query in tpl.appList) return !appConfig.useWhitelist
         }
 
@@ -182,12 +179,12 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
 
     override fun syncConfig(json: String) {
         synchronized(configLock) {
-            configFile.writeText(json)
             val newConfig = JsonConfig.parse(json)
             if (newConfig.configVersion != BuildConfig.CONFIG_VERSION) {
                 logW(TAG, "Sync config: version mismatch, need reboot")
                 return
             }
+            writeConfigAtomically(json)
             config = newConfig
             frameworkHooks.forEach(IFrameworkHook::onConfigChanged)
         }
@@ -196,7 +193,7 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
 
     override fun getServiceVersion() = BuildConfig.SERVICE_VERSION
 
-    override fun getFilterCount() = filterCount
+    override fun getFilterCount() = filterCount.get()
 
     override fun getLogs() = synchronized(loggerLock) {
         logFile.readText()
@@ -207,6 +204,18 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
             oldLogFile.delete()
             logFile.renameTo(oldLogFile)
             logFile.createNewFile()
+        }
+    }
+
+    private fun writeConfigAtomically(json: String) {
+        val output = atomicConfigFile.startWrite()
+        try {
+            output.write(json.toByteArray())
+            output.fd.sync()
+            atomicConfigFile.finishWrite(output)
+        } catch (e: Throwable) {
+            atomicConfigFile.failWrite(output)
+            throw e
         }
     }
 }

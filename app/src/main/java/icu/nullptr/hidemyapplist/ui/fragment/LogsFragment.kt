@@ -17,7 +17,9 @@ import icu.nullptr.hidemyapplist.service.ServiceClient
 import icu.nullptr.hidemyapplist.ui.adapter.LogAdapter
 import icu.nullptr.hidemyapplist.ui.util.makeToast
 import icu.nullptr.hidemyapplist.ui.util.setupToolbar
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -44,30 +46,35 @@ class LogsFragment : Fragment(R.layout.fragment_logs) {
 
     private fun updateLogs() {
         lifecycleScope.launch {
-            logCache = ServiceClient.logs
-            val raw = logCache?.split("\n")
-            if (raw == null) {
+            val (cache, logs) = withContext(Dispatchers.IO) {
+                val cache = ServiceClient.logs
+                cache to cache?.split("\n")?.let { raw ->
+                    buildList {
+                        val cur = StringBuilder()
+                        for (line in raw) {
+                            if (line.startsWith('[')) {
+                                if (cur.isNotEmpty()) {
+                                    val log = LogAdapter.parseLog(cur.toString())
+                                    if (log != null) add(log)
+                                }
+                                cur.clear()
+                            }
+                            cur.append(line)
+                        }
+                        if (cur.isNotEmpty()) {
+                            val log = LogAdapter.parseLog(cur.toString())
+                            if (log != null) add(log)
+                        }
+                        if (!PrefManager.logFilter_reverseOrder) reverse()
+                    }
+                }
+            }
+            logCache = cache
+            if (logs == null) {
                 binding.serviceOff.visibility = View.VISIBLE
             } else {
                 binding.serviceOff.visibility = View.GONE
-                adapter.logs = buildList {
-                    val cur = StringBuilder()
-                    for (line in raw) {
-                        if (line.startsWith('[')) {
-                            if (cur.isNotEmpty()) {
-                                val log = LogAdapter.parseLog(cur.toString())
-                                if (log != null) add(log)
-                            }
-                            cur.clear()
-                        }
-                        cur.append(line)
-                    }
-                    if (cur.isNotEmpty()) {
-                        val log = LogAdapter.parseLog(cur.toString())
-                        if (log != null) add(log)
-                    }
-                    if (!PrefManager.logFilter_reverseOrder) reverse()
-                }
+                adapter.logs = logs
             }
         }
     }

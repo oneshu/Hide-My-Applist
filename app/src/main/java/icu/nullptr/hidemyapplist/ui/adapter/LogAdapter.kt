@@ -2,8 +2,6 @@ package icu.nullptr.hidemyapplist.ui.adapter
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Color
-import android.os.Build
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -43,9 +41,7 @@ class LogAdapter(context: Context) : RecyclerView.Adapter<LogAdapter.ViewHolder>
     private val colorDebug = context.getColor(R.color.debug)
     private val colorInfo = context.getColor(R.color.info)
     private val colorWarn = context.getColor(R.color.warn)
-    private val colorError =
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) Color.RED
-        else context.themeColor(android.R.attr.colorError)
+    private val colorError = context.themeColor(android.R.attr.colorError)
 
     var logs = listOf<LogItem>()
         @SuppressLint("NotifyDataSetChanged")

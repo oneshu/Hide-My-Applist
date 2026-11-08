@@ -1,7 +1,6 @@
 package icu.nullptr.hidemyapplist.ui.activity
 
 import android.content.res.Resources
-import android.graphics.Color
 import android.os.Bundle
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
@@ -40,9 +39,4 @@ class MainActivity : MaterialActivity() {
 
     override fun computeUserThemeKey() = ThemeUtils.colorTheme + ThemeUtils.getNightThemeStyleRes(this)
 
-    override fun onApplyTranslucentSystemBars() {
-        super.onApplyTranslucentSystemBars()
-        window.statusBarColor = Color.TRANSPARENT
-        window.navigationBarColor = Color.TRANSPARENT
-    }
 }

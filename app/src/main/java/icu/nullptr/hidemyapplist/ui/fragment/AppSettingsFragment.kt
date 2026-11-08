@@ -24,6 +24,7 @@ import icu.nullptr.hidemyapplist.util.PackageHelper
 class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
 
     private val binding by viewBinding<FragmentSettingsBinding>()
+    private var savedState: Pair<Boolean, JsonConfig.AppConfig>? = null
     private val viewModel by viewModels<AppSettingsViewModel>() {
         val args by navArgs<AppSettingsFragmentArgs>()
         val cfg = ConfigManager.getAppConfig(args.packageName)
@@ -32,14 +33,31 @@ class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
         AppSettingsViewModel.Factory(pack)
     }
 
+    private fun currentState(): Pair<Boolean, JsonConfig.AppConfig> {
+        val pack = viewModel.pack
+        val config = pack.config.copy(
+            applyTemplates = pack.config.applyTemplates.toMutableSet(),
+            extraAppList = pack.config.extraAppList.toMutableSet()
+        )
+        return pack.enabled to config
+    }
+
     private fun saveConfig() {
-        if (!viewModel.pack.enabled) ConfigManager.setAppConfig(viewModel.pack.app, null)
-        else ConfigManager.setAppConfig(viewModel.pack.app, viewModel.pack.config)
+        val state = currentState()
+        if (state == savedState) return
+        val pack = viewModel.pack
+        ConfigManager.setAppConfig(pack.app, state.second.takeIf { pack.enabled })
+        savedState = state
     }
 
     private fun onBack() {
         saveConfig()
         navController.navigateUp()
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        savedState = currentState()
     }
 
     override fun onPause() {

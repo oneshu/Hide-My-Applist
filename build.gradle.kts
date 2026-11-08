@@ -11,21 +11,16 @@ plugins {
 }
 
 fun String.execute(currentWorkingDir: File = file("./")): String {
-    val byteOut = java.io.ByteArrayOutputStream()
-    project.exec {
+    return providers.exec {
         workingDir = currentWorkingDir
         commandLine = split("\\s".toRegex())
-        standardOutput = byteOut
-    }
-    return String(byteOut.toByteArray()).trim()
+    }.standardOutput.asText.get().trim()
 }
 
 val gitCommitCount = "git rev-list HEAD --count".execute().toInt()
 val gitCommitHash = "git rev-parse --verify --short HEAD".execute()
 
-val minSdkVer by extra(28)
-val targetSdkVer by extra(35)
-val buildToolsVer by extra("35.0.1")
+val androidSdkVer by extra(36)
 
 val appVerName by extra("3.4")
 val configVerCode by extra(90)
@@ -45,12 +40,11 @@ tasks.register("clean", Delete::class) {
 
 fun Project.configureBaseExtension() {
     extensions.findByType<BaseExtension>()?.run {
-        compileSdkVersion(targetSdkVer)
-        buildToolsVersion = buildToolsVer
+        compileSdkVersion(androidSdkVer)
 
         defaultConfig {
-            minSdk = minSdkVer
-            targetSdk = targetSdkVer
+            minSdk = androidSdkVer
+            targetSdk = androidSdkVer
             versionCode = gitCommitCount
             versionName = appVerName
             if (localProperties.getProperty("buildWithGitSuffix").toBoolean())

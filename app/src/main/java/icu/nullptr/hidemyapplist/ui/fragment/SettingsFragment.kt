@@ -1,7 +1,6 @@
 package icu.nullptr.hidemyapplist.ui.fragment
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.View
@@ -174,16 +173,12 @@ class SettingsFragment : Fragment(R.layout.fragment_settings), PreferenceFragmen
 
         private fun configureDataIsolation() {
             findPreference<Preference>("dataIsolation")?.let {
-                it.isEnabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
-                it.summary = when {
-                    it.isEnabled -> getString(
-                        R.string.settings_data_isolation_summary,
-                        CommonUtils.isAppDataIsolationEnabled.enabledString(),
-                        CommonUtils.isVoldAppDataIsolationEnabled.enabledString(),
-                        ConfigManager.forceMountData.enabledString()
-                    )
-                    else -> getString(R.string.settings_data_isolation_unsupported)
-                }
+                it.summary = getString(
+                    R.string.settings_data_isolation_summary,
+                    CommonUtils.isAppDataIsolationEnabled.enabledString(),
+                    CommonUtils.isVoldAppDataIsolationEnabled.enabledString(),
+                    ConfigManager.forceMountData.enabledString()
+                )
             }
         }
 

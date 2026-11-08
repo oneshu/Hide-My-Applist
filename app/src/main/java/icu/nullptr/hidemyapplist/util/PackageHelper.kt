@@ -1,7 +1,6 @@
 package icu.nullptr.hidemyapplist.util
 
 import android.content.pm.ApplicationInfo
-import android.content.pm.IPackageManager
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -9,11 +8,11 @@ import icu.nullptr.hidemyapplist.common.Constants
 import icu.nullptr.hidemyapplist.hmaApp
 import icu.nullptr.hidemyapplist.service.PrefManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.text.Collator
 import java.util.*
@@ -41,30 +40,6 @@ object PackageHelper {
         val icon: Bitmap
     )
 
-    private object Comparators {
-        val byLabel = Comparator<String> { o1, o2 ->
-            val n1 = loadAppLabel(o1).lowercase(Locale.getDefault())
-            val n2 = loadAppLabel(o2).lowercase(Locale.getDefault())
-            Collator.getInstance(Locale.getDefault()).compare(n1, n2)
-        }
-        val byPackageName = Comparator<String> { o1, o2 ->
-            val n1 = o1.lowercase(Locale.getDefault())
-            val n2 = o2.lowercase(Locale.getDefault())
-            Collator.getInstance(Locale.getDefault()).compare(n1, n2)
-        }
-        val byInstallTime = Comparator<String> { o1, o2 ->
-            val n1 = loadPackageInfo(o1).firstInstallTime
-            val n2 = loadPackageInfo(o2).firstInstallTime
-            n2.compareTo(n1)
-        }
-        val byUpdateTime = Comparator<String> { o1, o2 ->
-            val n1 = loadPackageInfo(o1).lastUpdateTime
-            val n2 = loadPackageInfo(o2).lastUpdateTime
-            n2.compareTo(n1)
-        }
-    }
-
-    private lateinit var ipm: IPackageManager
     private lateinit var packageManagerDelegate: PackageManagerDelegate
 
     private val packageCache = MutableSharedFlow<Map<String, PackageCache>>(replay = 1)
@@ -73,6 +48,7 @@ object PackageHelper {
 
     private val mRefreshing = MutableSharedFlow<Boolean>(replay = 1)
     val isRefreshing: SharedFlow<Boolean> = mRefreshing
+    private var refreshJob: Job? = null
 
     init {
         packageManagerDelegate = DefaultPackageManagerDelegate(hmaApp.packageManager)
@@ -84,7 +60,8 @@ object PackageHelper {
     }
 
     fun invalidateCache() {
-        hmaApp.globalScope.launch {
+        refreshJob?.cancel()
+        refreshJob = hmaApp.globalScope.launch {
             mRefreshing.emit(true)
             val cache = withContext(Dispatchers.IO) {
                 val packages = packageManagerDelegate.getInstalledPackages(0)
@@ -106,30 +83,43 @@ object PackageHelper {
     }
 
     suspend fun sortList(firstComparator: Comparator<String>) {
+        val cache = packageCache.first()
+        val locale = Locale.getDefault()
+        val collator = Collator.getInstance(locale)
+        val labels = cache.mapValues { it.value.label.lowercase(locale) }
+        val packageNames = cache.mapValues { it.key.lowercase(locale) }
+        val installTimes = cache.mapValues { it.value.info.firstInstallTime }
+        val updateTimes = cache.mapValues { it.value.info.lastUpdateTime }
         var comparator = when (PrefManager.appFilter_sortMethod) {
-            PrefManager.SortMethod.BY_LABEL -> Comparators.byLabel
-            PrefManager.SortMethod.BY_PACKAGE_NAME -> Comparators.byPackageName
-            PrefManager.SortMethod.BY_INSTALL_TIME -> Comparators.byInstallTime
-            PrefManager.SortMethod.BY_UPDATE_TIME -> Comparators.byUpdateTime
+            PrefManager.SortMethod.BY_LABEL -> Comparator<String> { a, b ->
+                collator.compare(labels[a].orEmpty(), labels[b].orEmpty())
+            }
+            PrefManager.SortMethod.BY_PACKAGE_NAME -> Comparator<String> { a, b ->
+                collator.compare(packageNames[a].orEmpty(), packageNames[b].orEmpty())
+            }
+            PrefManager.SortMethod.BY_INSTALL_TIME -> Comparator<String> { a, b ->
+                installTimes.getValue(b).compareTo(installTimes.getValue(a))
+            }
+            PrefManager.SortMethod.BY_UPDATE_TIME -> Comparator<String> { a, b ->
+                updateTimes.getValue(b).compareTo(updateTimes.getValue(a))
+            }
         }
         if (PrefManager.appFilter_reverseOrder) comparator = comparator.reversed()
-        val list = mAppList.first().sortedWith(firstComparator.then(comparator))
+        val list = mAppList.first()
+            .filter(cache::containsKey)
+            .sortedWith(firstComparator.then(comparator))
         mAppList.emit(list)
     }
 
-    fun loadPackageInfo(packageName: String): PackageInfo = runBlocking {
-        packageCache.first()[packageName]!!.info
-    }
+    private fun loadCached(packageName: String): PackageCache? =
+        packageCache.replayCache.firstOrNull()?.get(packageName)
 
-    fun loadAppLabel(packageName: String): String = runBlocking {
-        packageCache.first()[packageName]!!.label
-    }
+    fun loadPackageInfo(packageName: String): PackageInfo = loadCached(packageName)!!.info
 
-    fun loadAppIcon(packageName: String): Bitmap = runBlocking {
-        packageCache.first()[packageName]!!.icon
-    }
+    fun loadAppLabel(packageName: String): String = loadCached(packageName)!!.label
 
-    fun isSystem(packageName: String): Boolean = runBlocking {
-        packageCache.first()[packageName]?.info?.applicationInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM) != 0
-    }
+    fun loadAppIcon(packageName: String): Bitmap = loadCached(packageName)!!.icon
+
+    fun isSystem(packageName: String): Boolean =
+        loadCached(packageName)?.info?.applicationInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM) != 0
 }

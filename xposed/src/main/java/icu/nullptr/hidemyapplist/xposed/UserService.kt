@@ -3,7 +3,6 @@ package icu.nullptr.hidemyapplist.xposed
 import android.app.ActivityManagerHidden
 import android.content.AttributionSource
 import android.content.pm.IPackageManager
-import android.os.Build
 import android.os.Bundle
 import android.os.ServiceManager
 import icu.nullptr.hidemyapplist.common.BuildConfig
@@ -28,16 +27,8 @@ object UserService {
                 }
                 val extras = Bundle()
                 extras.putBinder("binder", HMAService.instance)
-                val reply = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    val attr = AttributionSource.Builder(1000).setPackageName("android").build()
-                    provider.call(attr, Constants.PROVIDER_AUTHORITY, "", null, extras)
-                } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
-                    provider.call("android", null, Constants.PROVIDER_AUTHORITY, "", null, extras)
-                } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-                    provider.call("android", Constants.PROVIDER_AUTHORITY, "", null, extras)
-                } else {
-                    provider.call("android", "", null, extras)
-                }
+                val attr = AttributionSource.Builder(1000).setPackageName("android").build()
+                val reply = provider.call(attr, Constants.PROVIDER_AUTHORITY, "", null, extras)
                 if (reply == null) {
                     logE(TAG, "Failed to send binder to app")
                     return

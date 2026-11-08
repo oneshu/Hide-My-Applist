@@ -89,7 +89,7 @@ fun afterEval() = android.applicationVariants.forEach { variant ->
     val variantCapped = variant.name.replaceFirstChar { it.titlecase(Locale.ROOT) }
     val variantLowered = variant.name.lowercase(Locale.ROOT)
 
-    task<Sync>("build$variantCapped") {
+    tasks.register<Sync>("build$variantCapped") {
         dependsOn("assemble$variantCapped")
         from(layout.buildDirectory.dir("outputs/apk/$variantLowered"))
         into(layout.buildDirectory.dir("apk/$variantLowered"))

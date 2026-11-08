@@ -13,7 +13,6 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.transition.MaterialContainerTransform
 import com.tsng.hidemyapplist.R
 import com.tsng.hidemyapplist.databinding.FragmentTemplateManageBinding
-import icu.nullptr.hidemyapplist.common.JsonConfig
 import icu.nullptr.hidemyapplist.service.ConfigManager
 import icu.nullptr.hidemyapplist.ui.adapter.TemplateAdapter
 import icu.nullptr.hidemyapplist.ui.util.navController
@@ -55,23 +54,16 @@ class TemplateManageFragment : Fragment(R.layout.fragment_template_manage) {
     private fun navigateToSettings(info: ConfigManager.TemplateInfo) {
         setFragmentResultListener("template_settings") { _, bundle ->
             fun deal() {
-                var name = bundle.getString("name")
-                val appliedList = bundle.getStringArrayList("appliedList")!!
-                val targetList = bundle.getStringArrayList("targetList")!!
-                if (info.name == null) { // New template
-                    if (name.isNullOrEmpty()) return
-                    ConfigManager.updateTemplate(name, JsonConfig.Template(info.isWhiteList, targetList.toSet()))
-                    ConfigManager.updateTemplateAppliedApps(name, appliedList)
-                } else {                 // Existing template
-                    if (name == null) {
-                        ConfigManager.deleteTemplate(info.name)
-                    } else {
-                        if (name.isEmpty()) name = info.name
-                        if (name != info.name) ConfigManager.renameTemplate(info.name, name)
-                        ConfigManager.updateTemplate(name, JsonConfig.Template(info.isWhiteList, targetList.toSet()))
-                        ConfigManager.updateTemplateAppliedApps(name, appliedList)
-                    }
-                }
+                val name = bundle.getString("name")
+                val appliedList = bundle.getStringArrayList("appliedList") ?: return
+                val targetList = bundle.getStringArrayList("targetList") ?: return
+                ConfigManager.saveTemplate(
+                    originalName = info.name,
+                    name = name,
+                    isWhiteList = info.isWhiteList,
+                    appliedList = appliedList,
+                    targetList = targetList.toSet()
+                )
             }
             deal()
             adapter.updateList()

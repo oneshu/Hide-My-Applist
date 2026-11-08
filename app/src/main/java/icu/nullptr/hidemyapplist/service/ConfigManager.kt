@@ -1,7 +1,7 @@
 package icu.nullptr.hidemyapplist.service
 
-import android.os.Build
 import android.util.Log
+import android.util.AtomicFile
 import com.tsng.hidemyapplist.R
 import icu.nullptr.hidemyapplist.common.BuildConfig
 import icu.nullptr.hidemyapplist.common.JsonConfig
@@ -16,13 +16,14 @@ object ConfigManager {
     private const val TAG = "ConfigManager"
     private lateinit var config: JsonConfig
     val configFile = File("${hmaApp.filesDir.absolutePath}/config.json")
+    private val atomicConfigFile by lazy { AtomicFile(configFile) }
 
     fun init() {
-        if (!configFile.exists()) {
-            configFile.writeText(JsonConfig().toString())
+        if (!atomicConfigFile.exists()) {
+            writeConfigFile(JsonConfig().toString())
         }
         runCatching {
-            config = JsonConfig.parse(configFile.readText())
+            config = JsonConfig.parse(atomicConfigFile.readFully().decodeToString())
             val configVersion = config.configVersion
             if (configVersion < 65) throw RuntimeException("Config version too old")
             config.configVersion = BuildConfig.CONFIG_VERSION
@@ -35,8 +36,20 @@ object ConfigManager {
 
     private fun saveConfig() {
         val text = config.toString()
-        configFile.writeText(text)
+        writeConfigFile(text)
         ServiceClient.syncConfig(text)
+    }
+
+    private fun writeConfigFile(text: String) {
+        val output = atomicConfigFile.startWrite()
+        try {
+            output.write(text.toByteArray())
+            output.fd.sync()
+            atomicConfigFile.finishWrite(output)
+        } catch (e: Throwable) {
+            atomicConfigFile.failWrite(output)
+            throw e
+        }
     }
 
     var detailLog: Boolean
@@ -54,9 +67,7 @@ object ConfigManager {
         }
 
     var forceMountData: Boolean
-        get() =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) config.forceMountData
-            else false
+        get() = config.forceMountData
         set(value) {
             config.forceMountData = value
             saveConfig()
@@ -86,37 +97,29 @@ object ConfigManager {
         return ArrayList(config.templates[name]?.appList ?: emptyList())
     }
 
-    fun deleteTemplate(name: String) {
-        config.scope.forEach { (_, appInfo) ->
-            appInfo.applyTemplates.remove(name)
+    fun saveTemplate(
+        originalName: String?,
+        name: String?,
+        isWhiteList: Boolean,
+        appliedList: List<String>,
+        targetList: Set<String>
+    ) {
+        Log.d(TAG, "saveTemplate: $originalName -> $name, apps = $targetList")
+        if (name == null) {
+            originalName ?: return
+            config.scope.forEach { (_, appInfo) -> appInfo.applyTemplates.remove(originalName) }
+            config.templates.remove(originalName)
+            saveConfig()
+            return
         }
-        config.templates.remove(name)
-        saveConfig()
-    }
 
-    fun renameTemplate(oldName: String, newName: String) {
-        if (oldName == newName) return
-        config.scope.forEach { (_, appInfo) ->
-            if (appInfo.applyTemplates.contains(oldName)) {
-                appInfo.applyTemplates.remove(oldName)
-                appInfo.applyTemplates.add(newName)
-            }
+        if (originalName != null && originalName != name) {
+            config.templates.remove(originalName)
+            config.scope.values.forEach { it.applyTemplates.remove(originalName) }
         }
-        config.templates[newName] = config.templates[oldName]!!
-        config.templates.remove(oldName)
-        saveConfig()
-    }
-
-    fun updateTemplate(name: String, template: JsonConfig.Template) {
-        Log.d(TAG, "updateTemplate: $name list = ${template.appList}")
-        config.templates[name] = template
-        saveConfig()
-    }
-
-    fun updateTemplateAppliedApps(name: String, appliedList: List<String>) {
-        Log.d(TAG, "updateTemplateAppliedApps: $name list = $appliedList")
+        config.templates[name] = JsonConfig.Template(isWhiteList, targetList)
         config.scope.forEach { (app, appInfo) ->
-            if (appliedList.contains(app)) appInfo.applyTemplates.add(name)
+            if (app in appliedList) appInfo.applyTemplates.add(name)
             else appInfo.applyTemplates.remove(name)
         }
         saveConfig()

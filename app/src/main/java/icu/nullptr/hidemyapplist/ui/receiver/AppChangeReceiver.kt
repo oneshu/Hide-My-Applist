@@ -23,7 +23,7 @@ class AppChangeReceiver : BroadcastReceiver() {
                 actions.forEach(::addAction)
                 addDataScheme("package")
             }
-            context.registerReceiver(AppChangeReceiver(), filter)
+            context.registerReceiver(AppChangeReceiver(), filter, Context.RECEIVER_EXPORTED)
         }
     }
 

@@ -2,7 +2,6 @@ package icu.nullptr.hidemyapplist.ui.fragment
 
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.text.Html
 import android.view.View
@@ -139,10 +138,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             else -> themeColor(android.R.attr.colorPrimary)
         }
         binding.statusCard.setCardBackgroundColor(color)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            binding.statusCard.outlineAmbientShadowColor = color
-            binding.statusCard.outlineSpotShadowColor = color
-        }
+        binding.statusCard.outlineAmbientShadowColor = color
+        binding.statusCard.outlineSpotShadowColor = color
         if (hmaApp.isHooked) {
             binding.moduleStatusIcon.setImageResource(R.drawable.outline_done_all_24)
             val versionNameSimple = BuildConfig.VERSION_NAME.substringBefore(".r")
