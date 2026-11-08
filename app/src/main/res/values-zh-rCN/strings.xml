@@ -36,6 +36,9 @@
     <string name="home_xposed_service_off">系统服务未运行</string>
     <string name="home_xposed_service_old">模块已更新，需要重启设备</string>
     <string name="home_xposed_filter_count">隐藏应用列表已经执行了 %d 次拦截</string>
+    <string name="home_template_count">%1$d 个模板</string>
+    <string name="home_no_templates">尚未创建模板</string>
+    <string name="home_app_count">已配置 %1$d 个应用</string>
     <string name="home_manage">管理</string>
     <string name="home_detection_test">拦截测试</string>
     <string name="home_download_test_app_title">下载拦截测试应用</string>
@@ -61,9 +64,31 @@
     <string name="list_sort_by_install_time">按安装时间</string>
     <string name="list_sort_by_update_time">按更新时间</string>
     <!-- Template manage -->
-    <string name="template_usage_hint">为“不安分”的应用建立模板，控制可获取的应用列表。\n\n黑名单（推荐）：模板中选中的应用对应用模板的应用不可见。\n白名单：模板中未选中的应用对应用模板的应用不可见。</string>
-    <string name="template_new_blacklist">创建黑名单模板</string>
-    <string name="template_new_whitelist">创建白名单模板</string>
+    <string name="template_usage_hint">黑名单模板会隐藏选中的应用；白名单模板则只保留选中的应用可见。模板应用到具体应用后才会生效。</string>
+    <string name="template_create">新建模板</string>
+    <string name="template_type_choose_title">选择模板类型</string>
+    <string name="template_type_blacklist_option">黑名单：隐藏选中的应用</string>
+    <string name="template_type_whitelist_option">白名单：只保留选中的应用可见</string>
+    <string name="next">下一步</string>
+    <string name="template_content_section">模板内容</string>
+    <string name="template_scope_section">应用范围</string>
+    <string name="template_scope_hint">范围内的应用会使用当前模板，限制自己能获取到的应用列表。</string>
+    <string name="template_target_blacklist_title">要隐藏的应用</string>
+    <string name="template_target_whitelist_title">保持可见的应用</string>
+    <string name="template_scope_title">模板作用的应用</string>
+    <string name="template_target_blacklist_picker_title">选择要隐藏的应用</string>
+    <string name="template_target_whitelist_picker_title">选择要保持可见的应用</string>
+    <string name="template_scope_picker_title">选择模板作用的应用</string>
+    <string name="template_list_blacklist_summary">隐藏 %1$d 个应用 · %2$s</string>
+    <string name="template_list_whitelist_summary">保持 %1$d 个应用可见 · %2$s</string>
+    <string name="template_not_applied">尚未应用</string>
+    <string name="template_filter_all">全部</string>
+    <string name="selection_count">已选 %1$d 项</string>
+    <string name="selection_clear">清空</string>
+    <string name="selection_done">完成</string>
+    <string name="selection_discard_title">放弃本次选择？</string>
+    <string name="selection_discard_message">当前选择的修改尚未确认。</string>
+    <string name="discard_selection">放弃</string>
     <string name="template_delete">你确定要删除此模板吗？</string>
     <string name="template_name">模板名称</string>
     <string name="template_name_invalid">名称无效</string>
@@ -85,6 +110,8 @@
     <string name="app_template_using">已启用 %d 个模板</string>
     <string name="app_extra_apps_visible_count">%d 个额外可见的应用</string>
     <string name="app_extra_apps_invisible_count">%d 个额外不可见的应用</string>
+    <string name="app_extra_apps_visible_title">选择额外保持可见的应用</string>
+    <string name="app_extra_apps_invisible_title">选择额外隐藏的应用</string>
     <!-- Logs -->
     <string name="logs_save">保存日志</string>
     <string name="logs_clear">清除日志</string>
@@ -105,12 +132,15 @@
     <string name="settings_force_mount_data">为所有应用启用数据隔离</string>
     <string name="settings_force_mount_data_summary">数据隔离对于 Target API 低于 30 的应用默认禁用</string>
     <string name="settings_detail_log">详细日志</string>
+    <string name="settings_detail_log_summary">记录更多诊断信息，同时会增加日志占用</string>
     <string name="settings_max_log_size">日志缓冲区大小</string>
     <string name="settings_hide_icon">在启动器中隐藏图标</string>
     <string name="settings_hide_icon_summary">你仍然可以在 Xposed 管理器中打开此应用</string>
     <string name="settings_language">语言</string>
-    <string name="settings_theme">主题</string>
+    <string name="settings_appearance">外观</string>
+    <string name="settings_logging">日志</string>
     <string name="settings_system_theme_color">系统主题色</string>
+    <string name="settings_system_theme_color_summary">系统支持时，使用壁纸生成的动态颜色</string>
     <string name="settings_theme_color">主题颜色</string>
     <string name="settings_dark_theme">深色主题</string>
     <string name="settings_pure_black_dark_theme">纯黑主题</string>
@@ -118,13 +148,15 @@
     <string name="settings_service">服务</string>
     <string name="settings_stop_system_service">停止系统服务</string>
     <string name="settings_stop_system_service_summary">需要重启设备才能再次启动系统服务</string>
+    <string name="settings_stop_system_service_toast">已请求停止系统服务</string>
+    <string name="stop">停止</string>
     <string name="settings_is_clean_env">同时清理运行环境？</string>
-    <string name="settings_is_clean_env_summary">删除 /data/misc/hide_my_applist_* 中的系统服务缓存。这意味着你需要在下次重启后手动启动一次模块应用，以便启用拦截，同时拦截次数也将被清理。</string>
     <string name="settings_force_clean_env">强制清理运行环境（root）</string>
     <string name="settings_force_clean_env_summary">只有在系统服务无法启动的情况下才应使用，否则请使用上面的选项。</string>
     <string name="settings_force_clean_env_toast_successful">运行环境已清理</string>
     <string name="settings_update">更新</string>
     <string name="settings_disable_update">禁用更新通知</string>
+    <string name="settings_disable_update_summary">不检查或显示更新通知</string>
     <string name="settings_receive_beta_update">接收测试版更新</string>
     <string name="settings_receive_beta_update_summary">注意：测试版可能不稳定</string>
     <!-- About -->

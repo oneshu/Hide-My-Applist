@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <PreferenceCategory android:title="@string/settings_language">
+    <PreferenceCategory android:title="@string/settings_appearance">
         <rikka.preference.SimpleMenuPreference
             android:defaultValue="SYSTEM"
             android:icon="@drawable/outline_language_24"
             android:key="language"
             android:summary="%s"
             android:title="@string/settings_language" />
-    </PreferenceCategory>
-
-    <PreferenceCategory android:title="@string/settings_theme">
         <SwitchPreference
             android:defaultValue="true"
             android:disableDependentsState="true"
             android:icon="@drawable/outline_palette_24"
             android:key="followSystemAccent"
+            android:summary="@string/settings_system_theme_color_summary"
             android:title="@string/settings_system_theme_color" />
         <rikka.preference.SimpleMenuPreference
             android:defaultValue="MATERIAL_BLUE"
@@ -48,8 +46,17 @@
             android:title="@string/settings_data_isolation"
             app:fragment="icu.nullptr.hidemyapplist.ui.fragment.SettingsFragment$DataIsolationPreferenceFragment" />
         <SwitchPreference
+            android:icon="@drawable/outline_hide_image_24"
+            android:key="hideIcon"
+            android:summary="@string/settings_hide_icon_summary"
+            android:title="@string/settings_hide_icon" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/settings_logging">
+        <SwitchPreference
             android:icon="@drawable/outline_bug_report_24"
             android:key="detailLog"
+            android:summary="@string/settings_detail_log_summary"
             android:title="@string/settings_detail_log" />
         <rikka.preference.SimpleMenuPreference
             android:defaultValue="512"
@@ -59,11 +66,6 @@
             android:key="maxLogSize"
             android:summary="%s"
             android:title="@string/settings_max_log_size" />
-        <SwitchPreference
-            android:icon="@drawable/outline_hide_image_24"
-            android:key="hideIcon"
-            android:summary="@string/settings_hide_icon_summary"
-            android:title="@string/settings_hide_icon" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/settings_service">
@@ -84,6 +86,7 @@
             android:disableDependentsState="true"
             android:icon="@drawable/outline_update_disabled_24"
             android:key="disableUpdate"
+            android:summary="@string/settings_disable_update_summary"
             android:title="@string/settings_disable_update" />
         <SwitchPreference
             android:dependency="disableUpdate"

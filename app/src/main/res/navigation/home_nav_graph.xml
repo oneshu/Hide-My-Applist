@@ -51,5 +51,9 @@
         <argument
             android:name="checked"
             app:argType="string[]" />
+        <argument
+            android:name="title"
+            android:defaultValue="@string/title_app_select"
+            app:argType="string" />
     </fragment>
 </navigation>

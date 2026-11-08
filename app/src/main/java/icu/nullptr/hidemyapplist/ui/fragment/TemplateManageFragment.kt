@@ -10,6 +10,7 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialContainerTransform
 import com.tsng.hidemyapplist.R
 import com.tsng.hidemyapplist.databinding.FragmentTemplateManageBinding
@@ -41,14 +42,38 @@ class TemplateManageFragment : Fragment(R.layout.fragment_template_manage) {
         postponeEnterTransition()
         view.doOnPreDraw { startPostponedEnterTransition() }
 
-        binding.newBlacklistTemplate.setOnClickListener {
-            navigateToSettings(ConfigManager.TemplateInfo(null, false))
+        binding.newTemplate.setOnClickListener {
+            showTemplateTypeDialog()
         }
-        binding.newWhitelistTemplate.setOnClickListener {
-            navigateToSettings(ConfigManager.TemplateInfo(null, true))
+        binding.typeFilter.setOnCheckedStateChangeListener { _, checkedIds ->
+            adapter.filterByType(
+                when (checkedIds.firstOrNull()) {
+                    R.id.template_filter_blacklist -> false
+                    R.id.template_filter_whitelist -> true
+                    else -> null
+                }
+            )
         }
         binding.templateList.layoutManager = LinearLayoutManager(context)
         binding.templateList.adapter = adapter
+    }
+
+    private fun showTemplateTypeDialog() {
+        var isWhiteList = false
+        val options = arrayOf(
+            getString(R.string.template_type_blacklist_option),
+            getString(R.string.template_type_whitelist_option)
+        )
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.template_type_choose_title)
+            .setSingleChoiceItems(options, 0) { _, which ->
+                isWhiteList = which == 1
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.next) { _, _ ->
+                navigateToSettings(ConfigManager.TemplateInfo(null, isWhiteList))
+            }
+            .show()
     }
 
     private fun navigateToSettings(info: ConfigManager.TemplateInfo) {

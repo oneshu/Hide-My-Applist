@@ -2,6 +2,7 @@ package icu.nullptr.hidemyapplist.ui.view
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.View
 import android.widget.LinearLayout
 import androidx.annotation.DrawableRes
 import by.kirich1409.viewbindingdelegate.CreateMethod
@@ -36,6 +37,20 @@ class ListItemView @JvmOverloads constructor(
         get() = binding.text.text
         set(value) {
             binding.text.text = value
+        }
+
+    var summary: CharSequence?
+        get() = binding.summary.text
+        set(value) {
+            binding.summary.text = value
+            binding.summary.visibility = if (value.isNullOrEmpty()) View.GONE else View.VISIBLE
+        }
+
+    var badgeText: CharSequence?
+        get() = binding.badge.text
+        set(value) {
+            binding.badge.text = value
+            binding.badge.visibility = if (value.isNullOrEmpty()) View.GONE else View.VISIBLE
         }
 
     fun setIcon(@DrawableRes icon: Int) {

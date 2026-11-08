@@ -6,6 +6,7 @@ import icu.nullptr.hidemyapplist.ui.view.AppItemView
 class AppScopeAdapter(
     private val checked: MutableSet<String>,
     firstFilter: ((String) -> Boolean)?,
+    private val onSelectionChanged: () -> Unit = {},
 ) : AppSelectAdapter(firstFilter) {
 
     private inline var String.isChecked
@@ -20,6 +21,7 @@ class AppScopeAdapter(
                 val packageName = filteredList[absoluteAdapterPosition]
                 packageName.isChecked = !packageName.isChecked
                 view.isChecked = packageName.isChecked
+                onSelectionChanged()
             }
         }
 
@@ -38,5 +40,11 @@ class AppScopeAdapter(
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
         return ViewHolder(view)
+    }
+
+    fun clearSelection() {
+        checked.clear()
+        notifyDataSetChanged()
+        onSelectionChanged()
     }
 }

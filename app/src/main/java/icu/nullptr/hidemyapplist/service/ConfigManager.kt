@@ -11,7 +11,12 @@ import java.io.File
 
 object ConfigManager {
 
-    data class TemplateInfo(val name: String?, val isWhiteList: Boolean)
+    data class TemplateInfo(
+        val name: String?,
+        val isWhiteList: Boolean,
+        val appCount: Int = 0,
+        val appliedCount: Int = 0
+    )
 
     private const val TAG = "ConfigManager"
     private lateinit var config: JsonConfig
@@ -84,7 +89,16 @@ object ConfigManager {
     }
 
     fun getTemplateList(): MutableList<TemplateInfo> {
-        return config.templates.mapTo(mutableListOf()) { TemplateInfo(it.key, it.value.isWhitelist) }
+        return config.templates.mapTo(mutableListOf()) { (name, template) ->
+            TemplateInfo(
+                name = name,
+                isWhiteList = template.isWhitelist,
+                appCount = template.appList.size,
+                appliedCount = config.scope.count { (_, appConfig) ->
+                    appConfig.applyTemplates.contains(name)
+                }
+            )
+        }
     }
 
     fun getTemplateAppliedAppList(name: String): ArrayList<String> {
@@ -96,6 +110,8 @@ object ConfigManager {
     fun getTemplateTargetAppList(name: String): ArrayList<String> {
         return ArrayList(config.templates[name]?.appList ?: emptyList())
     }
+
+    fun getEnabledAppCount(): Int = config.scope.size
 
     fun saveTemplate(
         originalName: String?,

@@ -3,9 +3,11 @@ package icu.nullptr.hidemyapplist.ui.fragment
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.View
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.preference.Preference
 import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
@@ -31,9 +33,29 @@ import java.util.*
 class SettingsFragment : Fragment(R.layout.fragment_settings), PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
 
     private val binding by viewBinding<FragmentSettingsBinding>()
+    private var subpageTitle: String? = null
+    private val backStackChangedListener = FragmentManager.OnBackStackChangedListener {
+        if (view != null && isAdded) updateToolbar()
+    }
+
+    private companion object {
+        const val ARG_SUBPAGE_TITLE = "subpage_title"
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        setupToolbar(binding.toolbar, getString(R.string.title_settings))
+        childFragmentManager.addOnBackStackChangedListener(backStackChangedListener)
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (childFragmentManager.popBackStackImmediate()) return
+                    isEnabled = false
+                    requireActivity().onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true
+                }
+            }
+        )
+        updateToolbar()
 
         if (childFragmentManager.findFragmentById(R.id.settings_container) == null) {
             childFragmentManager.beginTransaction()
@@ -43,13 +65,43 @@ class SettingsFragment : Fragment(R.layout.fragment_settings), PreferenceFragmen
     }
 
     override fun onPreferenceStartFragment(caller: PreferenceFragmentCompat, pref: Preference): Boolean {
+        subpageTitle = pref.title?.toString()
         val fragment = childFragmentManager.fragmentFactory.instantiate(requireContext().classLoader, pref.fragment!!)
-        fragment.arguments = pref.extras
+        fragment.arguments = Bundle().apply {
+            pref.extras?.let { putAll(it) }
+            putCharSequence(ARG_SUBPAGE_TITLE, pref.title)
+        }
         childFragmentManager.beginTransaction()
             .replace(R.id.settings_container, fragment)
             .addToBackStack(null)
             .commit()
         return true
+    }
+
+    override fun onDestroyView() {
+        childFragmentManager.removeOnBackStackChangedListener(backStackChangedListener)
+        super.onDestroyView()
+    }
+
+    private fun updateToolbar() {
+        val hasSubpage = childFragmentManager.backStackEntryCount > 0
+        if (hasSubpage) {
+            val currentTitle = childFragmentManager.fragments
+                .lastOrNull()
+                ?.arguments
+                ?.getCharSequence(ARG_SUBPAGE_TITLE)
+                ?.toString()
+            setupToolbar(
+                toolbar = binding.toolbar,
+                title = currentTitle ?: subpageTitle ?: getString(R.string.title_settings),
+                navigationIcon = R.drawable.baseline_arrow_back_24,
+                navigationOnClick = { childFragmentManager.popBackStack() }
+            )
+        } else {
+            setupToolbar(binding.toolbar, getString(R.string.title_settings))
+            binding.toolbar.setNavigationIcon(null)
+            binding.toolbar.setNavigationOnClickListener(null)
+        }
     }
 
     class SettingsPreferenceDataStore : PreferenceDataStore() {
@@ -169,6 +221,10 @@ class SettingsFragment : Fragment(R.layout.fragment_settings), PreferenceFragmen
             else getString(R.string.disabled)
         }
 
+        private fun recreateAfterPreferenceChange() {
+            view?.post { activity?.recreate() }
+        }
+
         private fun configureDataIsolation() {
             findPreference<Preference>("dataIsolation")?.let {
                 it.summary = getString(
@@ -205,37 +261,39 @@ class SettingsFragment : Fragment(R.layout.fragment_settings), PreferenceFragmen
                     it.summary = if (!TextUtils.isEmpty(locale.script)) locale.getDisplayScript(userLocale) else locale.getDisplayName(userLocale)
                 }
                 it.setOnPreferenceChangeListener { _, newValue ->
-                    val locale = hmaApp.getLocale(newValue as String)
-                    val config = resources.configuration
-                    config.setLocale(locale)
-                    LocaleDelegate.defaultLocale = locale
-                    hmaApp.resources.updateConfiguration(config, resources.displayMetrics)
-                    activity?.recreate()
+                    val localeTag = newValue as String
+                    view?.post {
+                        val locale = hmaApp.getLocale(localeTag)
+                        val config = resources.configuration
+                        config.setLocale(locale)
+                        LocaleDelegate.defaultLocale = locale
+                        hmaApp.resources.updateConfiguration(config, resources.displayMetrics)
+                        activity?.recreate()
+                    }
                     true
                 }
             }
 
             findPreference<SwitchPreference>("followSystemAccent")?.setOnPreferenceChangeListener { _, _ ->
-                activity?.recreate()
+                recreateAfterPreferenceChange()
                 true
             }
 
             findPreference<SimpleMenuPreference>("themeColor")?.setOnPreferenceChangeListener { _, _ ->
-                activity?.recreate()
+                recreateAfterPreferenceChange()
                 true
             }
 
             findPreference<SimpleMenuPreference>("darkTheme")?.setOnPreferenceChangeListener { _, newValue ->
                 val newMode = (newValue as String).toInt()
                 if (PrefManager.darkTheme != newMode) {
-                    AppCompatDelegate.setDefaultNightMode(newMode)
-                    activity?.recreate()
+                    view?.post { AppCompatDelegate.setDefaultNightMode(newMode) }
                 }
                 true
             }
 
             findPreference<SwitchPreference>("blackDarkTheme")?.setOnPreferenceChangeListener { _, _ ->
-                activity?.recreate()
+                recreateAfterPreferenceChange()
                 true
             }
 
@@ -243,18 +301,21 @@ class SettingsFragment : Fragment(R.layout.fragment_settings), PreferenceFragmen
 
             findPreference<Preference>("stopSystemService")?.setOnPreferenceClickListener {
                 if (ServiceClient.serviceVersion != 0) {
+                    val cleanRuntime = booleanArrayOf(false)
                     MaterialAlertDialogBuilder(requireContext())
-                        .setTitle(R.string.settings_is_clean_env)
-                        .setMessage(R.string.settings_is_clean_env_summary)
-                        .setPositiveButton(R.string.yes) { _, _ ->
-                            ServiceClient.stopService(true)
-                            makeToast(R.string.settings_stop_system_service)
+                        .setTitle(R.string.settings_stop_system_service)
+                        .setMessage(R.string.settings_stop_system_service_summary)
+                        .setMultiChoiceItems(
+                            arrayOf(getString(R.string.settings_is_clean_env)),
+                            cleanRuntime
+                        ) { _, which, checked ->
+                            cleanRuntime[which] = checked
                         }
-                        .setNegativeButton(R.string.no) { _, _ ->
-                            ServiceClient.stopService(false)
-                            makeToast(R.string.settings_stop_system_service)
+                        .setPositiveButton(R.string.stop) { _, _ ->
+                            ServiceClient.stopService(cleanRuntime[0])
+                            makeToast(R.string.settings_stop_system_service_toast)
                         }
-                        .setNeutralButton(android.R.string.cancel, null)
+                        .setNegativeButton(android.R.string.cancel, null)
                         .show()
                 } else makeToast(R.string.home_xposed_service_off)
                 true
@@ -263,7 +324,7 @@ class SettingsFragment : Fragment(R.layout.fragment_settings), PreferenceFragmen
             findPreference<Preference>("forceCleanEnv")?.setOnPreferenceClickListener {
                 MaterialAlertDialogBuilder(requireActivity())
                     .setTitle(R.string.settings_force_clean_env)
-                    .setMessage(R.string.settings_is_clean_env_summary)
+                    .setMessage(R.string.settings_force_clean_env_summary)
                     .setPositiveButton(android.R.string.ok) { _, _ ->
                         val result = SuUtils.execPrivileged("rm -rf /data/misc/hide_my_applist*")
                         if (result) makeToast(R.string.settings_force_clean_env_toast_successful)

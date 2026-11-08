@@ -11,6 +11,8 @@ class AppManageFragment : AppSelectFragment() {
 
     override val firstComparator: Comparator<String> = Comparator.comparing(ConfigManager::isHideEnabled).reversed()
 
+    override fun getToolbarTitle(): CharSequence = getString(R.string.title_app_manage)
+
     override val adapter = AppManageAdapter {
         val args = AppSettingsFragmentArgs(it)
         navController.navigate(R.id.nav_app_settings, args.toBundle())

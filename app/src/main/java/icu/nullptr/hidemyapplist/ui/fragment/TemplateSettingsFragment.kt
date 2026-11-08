@@ -94,7 +94,7 @@ class TemplateSettingsFragment : Fragment(R.layout.fragment_template_settings) {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) { confirmDiscard() }
         setupToolbar(
             toolbar = binding.toolbar,
-            title = getString(R.string.title_template_settings),
+            title = viewModel.originalName ?: getString(R.string.template_create),
             navigationIcon = R.drawable.baseline_arrow_back_24,
             navigationOnClick = { confirmDiscard() },
             menuRes = R.menu.menu_delete,
@@ -109,6 +109,14 @@ class TemplateSettingsFragment : Fragment(R.layout.fragment_template_settings) {
 
         binding.templateName.setText(viewModel.name)
         binding.templateName.addTextChangedListener { viewModel.name = it.toString() }
+        binding.templateType.text = getString(
+            if (viewModel.isWhiteList) R.string.whitelist else R.string.blacklist
+        )
+        binding.targetApps.text = getString(
+            if (viewModel.isWhiteList) R.string.template_target_whitelist_title
+            else R.string.template_target_blacklist_title
+        )
+        binding.appliedApps.text = getString(R.string.template_scope_title)
         binding.targetApps.setOnClickListener {
             setFragmentResultListener("app_select") { _, bundle ->
                 viewModel.targetAppList.value = bundle.getStringArrayList("checked")!!
@@ -116,7 +124,11 @@ class TemplateSettingsFragment : Fragment(R.layout.fragment_template_settings) {
             }
             val args = ScopeFragmentArgs(
                 filterOnlyEnabled = false,
-                checked = viewModel.targetAppList.value.toTypedArray()
+                checked = viewModel.targetAppList.value.toTypedArray(),
+                title = getString(
+                    if (viewModel.isWhiteList) R.string.template_target_whitelist_picker_title
+                    else R.string.template_target_blacklist_picker_title
+                )
             )
             navController.navigate(R.id.nav_scope, args.toBundle())
         }
@@ -128,7 +140,8 @@ class TemplateSettingsFragment : Fragment(R.layout.fragment_template_settings) {
             val args = ScopeFragmentArgs(
                 filterOnlyEnabled = true,
                 isWhiteList = viewModel.isWhiteList,
-                checked = viewModel.appliedAppList.value.toTypedArray()
+                checked = viewModel.appliedAppList.value.toTypedArray(),
+                title = getString(R.string.template_scope_picker_title)
             )
             navController.navigate(R.id.nav_scope, args.toBundle())
         }
@@ -138,12 +151,16 @@ class TemplateSettingsFragment : Fragment(R.layout.fragment_template_settings) {
                 val fmt =
                     if (viewModel.isWhiteList) R.string.template_apps_visible_count
                     else R.string.template_apps_invisible_count
-                binding.targetApps.text = String.format(getString(fmt), it.size)
+                binding.targetApps.summary = String.format(getString(fmt), it.size)
             }
         }
         lifecycleScope.launch {
             viewModel.appliedAppList.collect {
-                binding.appliedApps.text = String.format(getString(R.string.template_applied_count), it.size)
+                binding.appliedApps.summary = if (it.isEmpty()) {
+                    getString(R.string.template_not_applied)
+                } else {
+                    String.format(getString(R.string.template_applied_count), it.size)
+                }
             }
         }
     }

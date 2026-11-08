@@ -2,6 +2,7 @@ package icu.nullptr.hidemyapplist.ui.activity
 
 import android.content.res.Resources
 import android.os.Bundle
+import androidx.core.view.isVisible
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI.setupWithNavController
@@ -23,6 +24,13 @@ class MainActivity : MaterialActivity() {
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
         setupWithNavController(binding.bottomNav, navController)
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            binding.bottomNav.isVisible = destination.id in setOf(
+                R.id.nav_home,
+                R.id.nav_logs,
+                R.id.nav_settings
+            )
+        }
 
         MobileAds.initialize(this)
     }

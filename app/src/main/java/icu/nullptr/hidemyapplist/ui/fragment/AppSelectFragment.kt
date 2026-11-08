@@ -22,12 +22,14 @@ import kotlinx.coroutines.launch
 
 abstract class AppSelectFragment : Fragment(R.layout.fragment_app_select) {
 
-    private val binding by viewBinding<FragmentAppSelectBinding>()
+    protected val binding by viewBinding<FragmentAppSelectBinding>()
 
     protected abstract val firstComparator: Comparator<String>
     protected abstract val adapter: AppSelectAdapter
 
     private var search = ""
+
+    protected open fun getToolbarTitle(): CharSequence = getString(R.string.title_app_select)
 
     protected open fun onBack() {
         navController.navigateUp()
@@ -78,7 +80,7 @@ abstract class AppSelectFragment : Fragment(R.layout.fragment_app_select) {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) { onBack() }
         setupToolbar(
             toolbar = binding.toolbar,
-            title = getString(R.string.title_app_select),
+            title = getToolbarTitle(),
             navigationIcon = R.drawable.baseline_arrow_back_24,
             navigationOnClick = { onBack() },
             menuRes = R.menu.menu_app_list,

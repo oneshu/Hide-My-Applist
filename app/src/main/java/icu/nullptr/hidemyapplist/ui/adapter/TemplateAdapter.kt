@@ -12,7 +12,9 @@ class TemplateAdapter(
     private val onClickListener: ((ConfigManager.TemplateInfo) -> Unit)?
 ) : RecyclerView.Adapter<TemplateAdapter.ViewHolder>() {
 
-    private lateinit var list: List<ConfigManager.TemplateInfo>
+    private var allTemplates: List<ConfigManager.TemplateInfo> = emptyList()
+    private var list: List<ConfigManager.TemplateInfo> = emptyList()
+    private var whiteListFilter: Boolean? = null
 
     init {
         updateList()
@@ -32,6 +34,14 @@ class TemplateAdapter(
                     else R.drawable.baseline_assignment_24
                 )
                 text = info.name
+                badgeText = context.getString(if (info.isWhiteList) R.string.whitelist else R.string.blacklist)
+                summary = context.getString(
+                    if (info.isWhiteList) R.string.template_list_whitelist_summary
+                    else R.string.template_list_blacklist_summary,
+                    info.appCount,
+                    if (info.appliedCount == 0) context.getString(R.string.template_not_applied)
+                    else context.getString(R.string.template_applied_count, info.appliedCount)
+                )
             }
         }
     }
@@ -52,7 +62,7 @@ class TemplateAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(list[position])
 
     fun updateList() {
-        list = ConfigManager.getTemplateList().apply {
+        allTemplates = ConfigManager.getTemplateList().apply {
             sortWith { o1, o2 ->
                 if (o1.isWhiteList != o2.isWhiteList) {
                     o1.isWhiteList.compareTo(o2.isWhiteList)
@@ -61,6 +71,16 @@ class TemplateAdapter(
                 }
             }
         }
+        applyFilter()
+    }
+
+    fun filterByType(isWhiteList: Boolean?) {
+        whiteListFilter = isWhiteList
+        applyFilter()
+    }
+
+    private fun applyFilter() {
+        list = allTemplates.filter { whiteListFilter == null || it.isWhiteList == whiteListFilter }
         notifyDataSetChanged()
     }
 }

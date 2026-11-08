@@ -167,7 +167,11 @@ class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
 
                 val args = ScopeFragmentArgs(
                     filterOnlyEnabled = false,
-                    checked = pack.config.extraAppList.toTypedArray()
+                    checked = pack.config.extraAppList.toTypedArray(),
+                    title = getString(
+                        if (pack.config.useWhitelist) R.string.app_extra_apps_visible_title
+                        else R.string.app_extra_apps_invisible_title
+                    )
                 )
                 parent.navController.navigate(R.id.nav_scope, args.toBundle())
                 true

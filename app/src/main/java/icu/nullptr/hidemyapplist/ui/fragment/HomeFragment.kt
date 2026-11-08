@@ -33,6 +33,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
@@ -41,13 +44,18 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     private val backupSAFLauncher =
         registerForActivityResult(CreateDocument("application/json")) backup@{ uri ->
             if (uri == null) return@backup
-            ConfigManager.configFile.inputStream().use { input ->
-                hmaApp.contentResolver.openOutputStream(uri).use { output ->
-                    if (output == null) makeToast(R.string.home_export_failed)
-                    else input.copyTo(output)
+            runCatching {
+                ConfigManager.configFile.inputStream().use { input ->
+                    hmaApp.contentResolver.openOutputStream(uri).use { output ->
+                        if (output == null) throw IOException(getString(R.string.home_export_failed))
+                        input.copyTo(output)
+                    }
                 }
+            }.onSuccess {
+                makeToast(R.string.home_exported)
+            }.onFailure {
+                makeToast(R.string.home_export_failed)
             }
-            makeToast(R.string.home_exported)
         }
 
     private val restoreSAFLauncher =
@@ -58,17 +66,16 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                     .openInputStream(uri)?.reader().use { it?.readText() }
                     ?: throw IOException(getString(R.string.home_import_file_damaged))
                 ConfigManager.importConfig(backup)
+                updateConfigSummary()
                 makeToast(R.string.home_import_successful)
             }.onFailure {
                 it.printStackTrace()
                 MaterialAlertDialogBuilder(requireContext())
-                    .setCancelable(false)
                     .setTitle(R.string.home_import_failed)
                     .setMessage(it.message)
                     .setPositiveButton(android.R.string.ok, null)
                     .setNegativeButton(R.string.show_crash_log) { _, _ ->
                         MaterialAlertDialogBuilder(requireActivity())
-                            .setCancelable(false)
                             .setTitle(R.string.home_import_failed)
                             .setMessage(it.stackTraceToString())
                             .setPositiveButton(android.R.string.ok, null)
@@ -97,6 +104,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         runCatching {
             binding.adBanner.loadAd(AdRequest.Builder().build())
         }
+        binding.statusCard.setOnClickListener {
+            navController.navigate(R.id.nav_logs)
+        }
         binding.templateManage.setOnClickListener {
             val extras = FragmentNavigatorExtras(binding.manageCard to "transition_manage")
             navController.navigate(R.id.nav_template_manage, null, null, extras)
@@ -118,7 +128,8 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             } else startActivity(intent)
         }
         binding.backupConfig.setOnClickListener {
-            backupSAFLauncher.launch("HMA_Config.json")
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+            backupSAFLauncher.launch("HMA_Config_$timestamp.json")
         }
         binding.restoreConfig.setOnClickListener {
             restoreSAFLauncher.launch("application/json")
@@ -131,6 +142,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     override fun onStart() {
         super.onStart()
+        updateConfigSummary()
         val serviceVersion = ServiceClient.serviceVersion
         val color = when {
             !hmaApp.isHooked -> getColor(R.color.gray)
@@ -162,13 +174,25 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
     }
 
+    private fun updateConfigSummary() {
+        val templateCount = ConfigManager.getTemplateList().size
+        binding.templateManage.summary = if (templateCount == 0) {
+            getString(R.string.home_no_templates)
+        } else {
+            getString(R.string.home_template_count, templateCount)
+        }
+        binding.appManage.summary = getString(
+            R.string.home_app_count,
+            ConfigManager.getEnabledAppCount()
+        )
+    }
+
     private suspend fun loadUpdateDialog() {
         if (PrefManager.disableUpdate) return
         val updateInfo = fetchLatestUpdate() ?: return
         if (updateInfo.versionCode > BuildConfig.VERSION_CODE) {
             withContext(Dispatchers.Main) {
                 MaterialAlertDialogBuilder(requireContext())
-                    .setCancelable(false)
                     .setTitle(getString(R.string.home_new_update, updateInfo.versionName))
                     .setMessage(Html.fromHtml(updateInfo.content, Html.FROM_HTML_MODE_COMPACT))
                     .setPositiveButton("GitHub") { _, _ ->
@@ -183,7 +207,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         } else if (updateInfo.versionCode > PrefManager.lastVersion) {
             withContext(Dispatchers.Main) {
                 MaterialAlertDialogBuilder(requireContext())
-                    .setCancelable(false)
                     .setTitle(getString(R.string.home_update, updateInfo.versionName))
                     .setMessage(Html.fromHtml(updateInfo.content, Html.FROM_HTML_MODE_COMPACT))
                     .setPositiveButton(android.R.string.ok) { _, _ ->
