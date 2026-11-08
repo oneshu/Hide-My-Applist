@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
 abstract class AppSelectAdapter(
-    private val firstFilter: ((String) -> Boolean)? = null
+    private val packageFilter: ((String) -> Boolean)? = null
 ) : RecyclerView.Adapter<AppSelectAdapter.ViewHolder>(), Filterable {
 
     abstract class ViewHolder(view: AppItemView) : RecyclerView.ViewHolder(view) {
@@ -21,34 +21,35 @@ abstract class AppSelectAdapter(
         override fun performFiltering(constraint: CharSequence): FilterResults {
             return runBlocking {
                 val constraintLowered = constraint.toString().lowercase()
-                val filteredList = PackageHelper.appList.first().filter {
-                    if (firstFilter?.invoke(it) == false) return@filter false
-                    if (!PrefManager.appFilter_showSystem && PackageHelper.isSystem(it)) return@filter false
+                val matchingPackages = PackageHelper.packageNames.first().filter {
+                    if (packageFilter?.invoke(it) == false) return@filter false
+                    if (!PrefManager.showSystemApps && PackageHelper.isSystem(it)) return@filter false
                     val label = PackageHelper.loadAppLabel(it)
                     val packageInfo = PackageHelper.loadPackageInfo(it)
                     label.lowercase().contains(constraintLowered) || packageInfo.packageName.lowercase().contains(constraintLowered)
                 }
 
-                FilterResults().also { it.values = filteredList }
+                FilterResults().also { it.values = matchingPackages }
             }
         }
 
         @Suppress("UNCHECKED_CAST", "NotifyDataSetChanged")
         override fun publishResults(constraint: CharSequence, results: FilterResults) {
-            filteredList = results.values as List<String>
+            visiblePackages = results.values as List<String>
             notifyDataSetChanged()
         }
     }
 
-    private val mFilter = AppFilter()
+    private val appFilter = AppFilter()
 
-    protected var filteredList: List<String> = listOf()
+    protected var visiblePackages: List<String> = listOf()
 
-    override fun getItemCount() = filteredList.size
+    override fun getItemCount() = visiblePackages.size
 
-    override fun getItemId(position: Int) = filteredList[position].hashCode().toLong()
+    override fun getItemId(position: Int) = visiblePackages[position].hashCode().toLong()
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(filteredList[position])
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) =
+        holder.bind(visiblePackages[position])
 
-    override fun getFilter(): Filter = mFilter
+    override fun getFilter(): Filter = appFilter
 }

@@ -13,16 +13,15 @@
     <string name="title_about">About</string>
 
     <string name="do_not_dual">Do not install HMA to secondary user</string>
-    <string name="show_crash_log">Show crash log</string>
     <string name="config_damaged">Config file damaged. Please clean the app data</string>
     <string name="edit_list">Edit list</string>
     <string name="save">Save</string>
     <string name="delete">Delete</string>
-    <string name="enabled">Enabled</string>
-    <string name="disabled">Disabled</string>
-    <string name="work_mode">Work mode</string>
+    <string name="work_mode">Mode</string>
     <string name="blacklist">Blacklist</string>
     <string name="whitelist">Whitelist</string>
+    <string name="app_blacklist_mode">Blacklist</string>
+    <string name="app_whitelist_mode">Whitelist</string>
     <string name="application">Application</string>
     <string name="preferences">Preferences</string>
     <string name="refresh">Refresh</string>
@@ -38,42 +37,29 @@
     <string name="home_xposed_service_on">System service running [%d]</string>
     <string name="home_xposed_service_off">System service not running</string>
     <string name="home_xposed_service_old">Module updated, need reboot</string>
-    <string name="home_xposed_filter_count">Hide My Applist has filtered total %d requests</string>
+    <string name="home_xposed_filter_count">%d queries blocked · Tap to view logs</string>
     <string name="home_template_count">%1$d templates</string>
     <string name="home_no_templates">No templates yet</string>
     <string name="home_app_count">%1$d apps configured</string>
-    <string name="home_manage">Manage</string>
-    <string name="home_detection_test">Detection test</string>
-    <string name="home_download_test_app_title">Download test app</string>
-    <string name="home_download_test_app_message">We have developed an individual detection test app and migrated detection test to it. Do you want to download it now?</string>
-    <string name="home_backup_and_restore">Backup &amp; Restore</string>
-    <string name="home_backup_config">Backup config</string>
-    <string name="home_restore_config">Restore config</string>
-    <string name="home_import_successful">Import successful</string>
-    <string name="home_import_failed">Import failed</string>
-    <string name="home_import_app_version_too_old">Module version lower than the backup</string>
-    <string name="home_import_backup_version_too_old">Backup version too old</string>
-    <string name="home_import_file_damaged">Backup file was damaged</string>
-    <string name="home_export_failed">Export failed</string>
-    <string name="home_exported">Backed up config</string>
-    <string name="home_new_update">New update available: %s</string>
-    <string name="home_update">Update: %s</string>
+    <string name="home_features">Features</string>
+    <string name="home_global_hide">HMA hiding</string>
+    <string name="home_global_hide_summary">Turns off hiding while keeping templates and app rules</string>
+    <string name="home_data_isolation_on_summary">On — blocks access to other apps’ data directories</string>
+    <string name="home_data_isolation_off_summary">Off — app data directories are not restricted</string>
+    <string name="home_force_mount_data">Isolate older apps too</string>
+    <string name="home_force_mount_data_summary">Also isolates apps targeting API below 30</string>
+    <string name="feature_enabled">Enabled</string>
+    <string name="feature_disabled">Disabled</string>
 
     <!-- App select -->
     <string name="list_show_system">Show system apps</string>
-    <string name="list_sorting">Sorting</string>
-    <string name="list_reverse_order">Reverse order</string>
-    <string name="list_sort_by_label">By app name</string>
-    <string name="list_sort_by_package_name">By package name</string>
-    <string name="list_sort_by_install_time">By install time</string>
-    <string name="list_sort_by_update_time">By update time</string>
 
     <!-- Template manage -->
     <string name="template_usage_hint">Blacklist templates hide the selected apps. Whitelist templates keep only the selected apps visible. A template takes effect only after it is applied to an app.</string>
     <string name="template_create">New template</string>
     <string name="template_type_choose_title">Choose template type</string>
-    <string name="template_type_blacklist_option">Blacklist — hide selected apps</string>
-    <string name="template_type_whitelist_option">Whitelist — keep only selected apps visible</string>
+    <string name="template_type_blacklist_option">Blacklist — hide only the selected apps</string>
+    <string name="template_type_whitelist_option">Whitelist — show only the selected apps</string>
     <string name="next">Next</string>
     <string name="template_content_section">Template content</string>
     <string name="template_scope_section">App scope</string>
@@ -87,7 +73,6 @@
     <string name="template_list_blacklist_summary">Hides %1$d apps · %2$s</string>
     <string name="template_list_whitelist_summary">Keeps %1$d apps visible · %2$s</string>
     <string name="template_not_applied">Not applied</string>
-    <string name="template_filter_all">All</string>
     <string name="selection_count">%1$d selected</string>
     <string name="selection_clear">Clear</string>
     <string name="selection_done">Done</string>
@@ -108,70 +93,91 @@
     <string name="template_apps_invisible_count">%d apps invisible</string>
 
     <!-- App settings -->
-    <string name="app_enable_hide">Enable hide</string>
-    <string name="app_template_config">Template config</string>
+    <string name="app_enable_hide">Enable hiding</string>
+    <string name="app_enable_on">On</string>
+    <string name="app_enable_off">Off</string>
+    <string name="app_hide_options">Hiding method</string>
+    <string name="work_mode_blacklist_card_summary">Hide listed apps</string>
+    <string name="work_mode_whitelist_card_summary">Show listed apps only</string>
+    <string name="work_mode_blacklist_summary">Hide apps in the list; keep apps outside it visible</string>
+    <string name="work_mode_whitelist_summary">Show only apps in the list; hide every other app</string>
+    <string name="work_mode_switch_title">Switch hiding method</string>
+    <string name="work_mode_switch_message">Switching methods clears the current list; choose templates and extra apps again.</string>
+    <string name="work_mode_switch_confirm">Clear and switch</string>
+    <string name="app_rule_config_hidden">Select apps to hide</string>
+    <string name="app_rule_config_visible">Select apps to show</string>
+    <string name="app_templates">Choose from a template</string>
+    <string name="app_templates_none">Use a saved group of apps</string>
+    <string name="app_template_names_separator">, </string>
     <string name="app_choose_template">Choose template</string>
-    <string name="app_exclude_system_apps">Exclude system apps</string>
-    <string name="app_exclude_system_apps_summary">Turn off this option only when really necessary. It is likely to cause crash with it disabled</string>
-    <string name="app_template_using">Using %d templates</string>
-    <string name="app_extra_apps_visible_count">%d additional apps visible</string>
-    <string name="app_extra_apps_invisible_count">%d additional apps invisible</string>
-    <string name="app_extra_apps_visible_title">Select apps to make additionally visible</string>
-    <string name="app_extra_apps_invisible_title">Select apps to make additionally invisible</string>
+    <string name="app_exclude_system_apps">Keep all system apps visible</string>
+    <string name="app_extra_apps_title">Select apps individually</string>
+    <string name="app_extra_apps_visible_title">Select apps to allow</string>
+    <string name="app_extra_apps_invisible_title">Select apps to hide</string>
+    <string name="app_extra_apps_none">Only for this configuration; template unchanged</string>
+    <string name="app_extra_apps_selected">%d · only for this configuration</string>
 
     <!-- Logs -->
-    <string name="logs_save">Save logs</string>
-    <string name="logs_clear">Clear logs</string>
+    <string name="logs_save">Save full logs</string>
+    <string name="logs_clear">Clear all</string>
     <string name="logs_empty">No logs to save</string>
     <string name="logs_saved">Logs saved</string>
+    <string name="logs_save_failed">Could not save the log file</string>
+    <string name="logs_source_system_service">System service</string>
+    <string name="logs_source_module_service">Module service</string>
+    <string name="logs_source_module_loader">Module loader</string>
+    <string name="logs_source_app_filter">App-list filter</string>
+    <string name="logs_source_data_isolation">App data isolation</string>
+    <string name="logs_source_other">Other</string>
+    <string name="logs_event_data_ready">The system service prepared its runtime data.</string>
+    <string name="logs_event_config_missing">No configuration was found. Default settings will be used.</string>
+    <string name="logs_event_config_loaded">Hidden-app rules were loaded.</string>
+    <string name="logs_event_hook_loaded">App-list filtering was enabled.</string>
+    <string name="logs_event_data_isolation_enabled">App data isolation is enabled.</string>
+    <string name="logs_event_data_isolation_disabled">App data isolation is disabled.</string>
+    <string name="logs_event_hooks_installed">All filtering components are running.</string>
+    <string name="logs_event_service_started">The hidden-app system service started.</string>
+    <string name="logs_event_user_service_started">The module service started.</string>
+    <string name="logs_event_app_connected">The management app connected to the hidden-app service.</string>
+    <string name="logs_event_observer_started">The system service started listening for app-list requests.</string>
+    <string name="logs_event_client_connected">The management app connected (UID %1$s).</string>
+    <string name="logs_event_module_injected">The module was loaded into the system framework.</string>
+    <string name="logs_event_pms_connected">Connected to the system package manager.</string>
+    <string name="logs_event_service_initializing">Starting hidden-app service version %1$s.</string>
+    <string name="logs_event_signature_mismatch">The module signature does not match, so the service was stopped.</string>
+    <string name="logs_event_provider_failed">Could not connect to the configuration provider.</string>
+    <string name="logs_event_binder_failed">Could not connect the management app to the module service.</string>
+    <string name="logs_event_count_save_failed">Could not save the total blocked-request count.</string>
+    <string name="logs_event_count_load_failed">Could not read the blocked-request count. Counting restarted from zero.</string>
+    <string name="logs_event_config_parse_failed">The configuration could not be read. Default settings are in use.</string>
+    <string name="logs_event_config_version_mismatch">The configuration version is incompatible and must be reloaded.</string>
+    <string name="logs_event_sync_needs_restart">The module version changed. Restart the system framework service for the new version to take effect.</string>
+    <string name="logs_event_config_synced">Configuration changes were applied.</string>
+    <string name="logs_event_hook_error">A filtering component encountered an error and was disabled to protect the system.</string>
+    <string name="logs_event_force_mount">App data isolation was applied to an app.</string>
+    <string name="logs_event_filtered_query">%1$s tried to read the app list. Hidden apps were filtered out.</string>
+    <string name="logs_event_filtered_archive">%1$s tried to query archived packages. The hidden app record was filtered out.</string>
+    <string name="logs_event_filter_detail">%1$s requested information about %2$s. The hidden entry was filtered.</string>
+    <string name="logs_filter_all">All records</string>
+    <string name="logs_filter_issues">Warnings and errors</string>
 
     <!-- Settings -->
-    <string name="settings_module">Module</string>
-    <string name="settings_data_isolation">Data isolation</string>
-    <string name="settings_data_isolation_summary">App data: %1$s\nVold app data: %2$s\nForce mount: %3$s</string>
-    <string name="settings_data_isolation_unsupported">This option is only available on Android 11 and above</string>
-    <string name="settings_app_data_isolation">App data isolation</string>
-    <string name="settings_vold_app_data_isolation">Vold app data isolation</string>
-    <string name="settings_warning">Warning</string>
-    <string name="settings_vold_warning">This will enable an AOSP feature which make app\'s external private storage directory isolated. This can help improve hiding apps while may cause stability issues. This feature may stop working at any time since it is abandoned in AOSP.</string>
-    <string name="settings_change_require_root">Changing requires root permission</string>
-    <string name="settings_need_reboot">Changing requires reboot</string>
-    <string name="settings_permission_denied">Permission denied</string>
-    <string name="settings_force_mount_data">Enforce data isolation for all apps</string>
-    <string name="settings_force_mount_data_summary">Data isolation is disabled for apps target API lower than 30 by default</string>
     <string name="settings_detail_log">Detail log for debugging</string>
     <string name="settings_detail_log_summary">Record additional diagnostic details. This increases log size.</string>
-    <string name="settings_max_log_size">Logger buffer sizes</string>
     <string name="settings_hide_icon">Hide module icon in launcher</string>
     <string name="settings_hide_icon_summary">You can still open the app in Xposed manager</string>
 
     <string name="settings_language">Language</string>
-    <string name="settings_appearance">Appearance</string>
-    <string name="settings_logging">Logging</string>
-
-    <string name="settings_system_theme_color">System theme color</string>
-    <string name="settings_system_theme_color_summary">Use the system wallpaper color when available</string>
-    <string name="settings_theme_color">Theme color</string>
-    <string name="settings_dark_theme">Dark theme</string>
-    <string name="settings_pure_black_dark_theme">Pure black dark theme</string>
-    <string name="settings_pure_black_dark_theme_summary">Use the pure black theme if dark theme is enabled</string>
-
-    <string name="settings_service">Service</string>
-    <string name="settings_stop_system_service">Stop system service</string>
-    <string name="settings_stop_system_service_summary">Need reboot to restart service</string>
-    <string name="settings_stop_system_service_toast">System service stop requested</string>
-    <string name="stop">Stop</string>
-    <string name="settings_is_clean_env">Clean runtime environment at the same time?</string>
-    <string name="settings_force_clean_env">Force clean runtime environment (root)</string>
-    <string name="settings_force_clean_env_summary">Only if system service fails to start, otherwise you should click the above option.</string>
-    <string name="settings_force_clean_env_toast_successful">Runtime environment cleaned</string>
-
-    <string name="settings_update">Update</string>
-    <string name="settings_disable_update">Disable update notification</string>
-    <string name="settings_disable_update_summary">Do not check for or show update notifications</string>
-    <string name="settings_receive_beta_update">Receive beta update</string>
-    <string name="settings_receive_beta_update_summary">Beta version may be unstable</string>
-
+    <string name="settings_general">General</string>
+    <string name="settings_module">Module</string>
+    <string name="settings_about">About</string>
+    <string name="settings_data_isolation">App data isolation</string>
+    <string name="settings_need_reboot">System restart required to apply</string>
+    <string name="settings_permission_denied">Permission denied</string>
+    <string name="settings_theme_mode">Theme mode</string>
+    <string name="theme_follow_system">Follow system</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
     <!-- About -->
     <string name="about_description">
         Although It is incorrect to detect specific app installation, yet not every app using root provides random package name support. In this case, detected apps that use root (such as Fake Location and Storage Isolation) is equal to detected root itself.\n\nAt the same time, some smart apps use various loopholes to acquire your app list, so that it can draw a persona for you.\n\nThis module provides some methods to test whether you have already hidden your applist nicely. Also, it can work as an Xposed module to hide some apps or reject app list requests to protect your privacy.
@@ -184,27 +190,6 @@
         Config modification effective in real time.
     </string>
     <string name="about_developer">Developer</string>
-    <string name="about_support">Support and feedback</string>
     <string name="about_open_source">Open source licenses</string>
 
-    <!-- Colors -->
-    <string name="color_sakura">Sakura</string>
-    <string name="color_red">Red</string>
-    <string name="color_pink">Pink</string>
-    <string name="color_purple">Purple</string>
-    <string name="color_deep_purple">Deep purple</string>
-    <string name="color_indigo">Indigo</string>
-    <string name="color_blue">Blue</string>
-    <string name="color_light_blue">Light blue</string>
-    <string name="color_cyan">Cyan</string>
-    <string name="color_teal">Teal</string>
-    <string name="color_green">Green</string>
-    <string name="color_light_green">Light green</string>
-    <string name="color_lime">Lime</string>
-    <string name="color_yellow">Yellow</string>
-    <string name="color_amber">Amber</string>
-    <string name="color_orange">Orange</string>
-    <string name="color_deep_orange">Deep orange</string>
-    <string name="color_brown">Brown</string>
-    <string name="color_blue_grey">Blue grey</string>
 </resources>

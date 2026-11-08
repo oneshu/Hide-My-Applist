@@ -3,10 +3,9 @@ package icu.nullptr.hidemyapplist.util
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import icu.nullptr.hidemyapplist.common.Constants
 import icu.nullptr.hidemyapplist.hmaApp
-import icu.nullptr.hidemyapplist.service.PrefManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -17,109 +16,78 @@ import kotlinx.coroutines.withContext
 import java.text.Collator
 import java.util.*
 
-interface PackageManagerDelegate {
-    fun getInstalledPackages(flags: Int): List<PackageInfo>
-    fun getApplicationLabel(info: ApplicationInfo): CharSequence
-}
-
-class DefaultPackageManagerDelegate(private val packageManager: PackageManager) : PackageManagerDelegate {
-    override fun getInstalledPackages(flags: Int): List<PackageInfo> {
-        return packageManager.getInstalledPackages(flags)
-    }
-
-    override fun getApplicationLabel(info: ApplicationInfo): CharSequence {
-        return packageManager.getApplicationLabel(info)
-    }
-}
-
 object PackageHelper {
 
-    class PackageCache(
+    class CachedPackage(
         val info: PackageInfo,
         val label: String,
-        val icon: Bitmap
+        val icon: Drawable
     )
 
-    private lateinit var packageManagerDelegate: PackageManagerDelegate
+    private val packageCache = MutableSharedFlow<Map<String, CachedPackage>>(replay = 1)
+    private val mutablePackageNames = MutableSharedFlow<List<String>>(replay = 1)
+    val packageNames: SharedFlow<List<String>> = mutablePackageNames
 
-    private val packageCache = MutableSharedFlow<Map<String, PackageCache>>(replay = 1)
-    private val mAppList = MutableSharedFlow<List<String>>(replay = 1)
-    val appList: SharedFlow<List<String>> = mAppList
-
-    private val mRefreshing = MutableSharedFlow<Boolean>(replay = 1)
-    val isRefreshing: SharedFlow<Boolean> = mRefreshing
+    private val mutableRefreshing = MutableSharedFlow<Boolean>(replay = 1)
+    val isRefreshing: SharedFlow<Boolean> = mutableRefreshing
     private var refreshJob: Job? = null
 
     init {
-        packageManagerDelegate = DefaultPackageManagerDelegate(hmaApp.packageManager)
-        invalidateCache()
+        refreshPackages()
     }
 
-    fun setPackageManagerDelegate(delegate: PackageManagerDelegate) {
-        packageManagerDelegate = delegate
-    }
-
-    fun invalidateCache() {
+    fun refreshPackages() {
         refreshJob?.cancel()
         refreshJob = hmaApp.globalScope.launch {
-            mRefreshing.emit(true)
-            val cache = withContext(Dispatchers.IO) {
-                val packages = packageManagerDelegate.getInstalledPackages(0)
-                mutableMapOf<String, PackageCache>().also {
+            mutableRefreshing.emit(true)
+            val loadedPackages = withContext(Dispatchers.IO) {
+                val packageManager = hmaApp.packageManager
+                val packages = packageManager.getInstalledPackages(
+                    PackageManager.PackageInfoFlags.of(0)
+                )
+                mutableMapOf<String, CachedPackage>().also {
                     for (packageInfo in packages) {
                         if (packageInfo.packageName in Constants.packagesShouldNotHide) continue
                         packageInfo.applicationInfo?.let { appInfo ->
-                            val label = packageManagerDelegate.getApplicationLabel(appInfo).toString()
-                            val icon = hmaApp.appIconLoader.loadIcon(appInfo)
-                            it[packageInfo.packageName] = PackageCache(packageInfo, label, icon)
+                            val label = packageManager.getApplicationLabel(appInfo).toString()
+                            val icon = packageManager.getApplicationIcon(appInfo)
+                            it[packageInfo.packageName] =
+                                CachedPackage(packageInfo, label, icon)
                         }
                     }
                 }
             }
-            packageCache.emit(cache)
-            mAppList.emit(cache.keys.toList())
-            mRefreshing.emit(false)
+            packageCache.emit(loadedPackages)
+            mutablePackageNames.emit(loadedPackages.keys.toList())
+            mutableRefreshing.emit(false)
         }
     }
 
-    suspend fun sortList(firstComparator: Comparator<String>) {
-        val cache = packageCache.first()
+    suspend fun sortPackages(primaryComparator: Comparator<String>) {
+        val packagesByName = packageCache.first()
         val locale = Locale.getDefault()
         val collator = Collator.getInstance(locale)
-        val labels = cache.mapValues { it.value.label.lowercase(locale) }
-        val packageNames = cache.mapValues { it.key.lowercase(locale) }
-        val installTimes = cache.mapValues { it.value.info.firstInstallTime }
-        val updateTimes = cache.mapValues { it.value.info.lastUpdateTime }
-        var comparator = when (PrefManager.appFilter_sortMethod) {
-            PrefManager.SortMethod.BY_LABEL -> Comparator<String> { a, b ->
-                collator.compare(labels[a].orEmpty(), labels[b].orEmpty())
-            }
-            PrefManager.SortMethod.BY_PACKAGE_NAME -> Comparator<String> { a, b ->
-                collator.compare(packageNames[a].orEmpty(), packageNames[b].orEmpty())
-            }
-            PrefManager.SortMethod.BY_INSTALL_TIME -> Comparator<String> { a, b ->
-                installTimes.getValue(b).compareTo(installTimes.getValue(a))
-            }
-            PrefManager.SortMethod.BY_UPDATE_TIME -> Comparator<String> { a, b ->
-                updateTimes.getValue(b).compareTo(updateTimes.getValue(a))
-            }
+        val labelsByName = packagesByName.mapValues { it.value.label.lowercase(locale) }
+        val labelComparator = Comparator<String> { first, second ->
+            collator.compare(labelsByName[first].orEmpty(), labelsByName[second].orEmpty())
         }
-        if (PrefManager.appFilter_reverseOrder) comparator = comparator.reversed()
-        val list = mAppList.first()
-            .filter(cache::containsKey)
-            .sortedWith(firstComparator.then(comparator))
-        mAppList.emit(list)
+        val sortedPackages = mutablePackageNames.first()
+            .filter(packagesByName::containsKey)
+            .sortedWith(primaryComparator.then(labelComparator))
+        mutablePackageNames.emit(sortedPackages)
     }
 
-    private fun loadCached(packageName: String): PackageCache? =
+    private fun loadCached(packageName: String): CachedPackage? =
         packageCache.replayCache.firstOrNull()?.get(packageName)
 
     fun loadPackageInfo(packageName: String): PackageInfo = loadCached(packageName)!!.info
 
     fun loadAppLabel(packageName: String): String = loadCached(packageName)!!.label
 
-    fun loadAppIcon(packageName: String): Bitmap = loadCached(packageName)!!.icon
+    fun loadAppIcon(packageName: String): Drawable = loadCached(packageName)!!.icon
 
     fun isSystem(packageName: String): Boolean =
-        loadCached(packageName)?.info?.applicationInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM) != 0
+        loadCached(packageName)?.info?.applicationInfo?.flags?.and(
+            ApplicationInfo.FLAG_SYSTEM or ApplicationInfo.FLAG_UPDATED_SYSTEM_APP
+        ) != 0
 }

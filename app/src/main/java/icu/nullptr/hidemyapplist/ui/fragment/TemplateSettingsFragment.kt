@@ -1,6 +1,5 @@
 package icu.nullptr.hidemyapplist.ui.fragment
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import androidx.activity.addCallback
@@ -11,7 +10,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.transition.MaterialContainerTransform
 import com.tsng.hidemyapplist.R
 import com.tsng.hidemyapplist.databinding.FragmentTemplateSettingsBinding
 import icu.nullptr.hidemyapplist.service.ConfigManager
@@ -76,18 +74,10 @@ class TemplateSettingsFragment : Fragment(R.layout.fragment_template_settings) {
     private fun saveResult(delete: Boolean) {
         setFragmentResult("template_settings", Bundle().apply {
             putString("name", if (delete) null else viewModel.name)
-            putStringArrayList("appliedList", viewModel.appliedAppList.value)
-            putStringArrayList("targetList", viewModel.targetAppList.value)
+            putStringArrayList("appliedPackages", viewModel.appliedPackages.value)
+            putStringArrayList("templatePackages", viewModel.templatePackages.value)
         })
         navController.navigateUp()
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        sharedElementEnterTransition = MaterialContainerTransform().apply {
-            drawingViewId = R.id.nav_host_fragment
-            scrimColor = Color.TRANSPARENT
-        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -110,53 +100,55 @@ class TemplateSettingsFragment : Fragment(R.layout.fragment_template_settings) {
         binding.templateName.setText(viewModel.name)
         binding.templateName.addTextChangedListener { viewModel.name = it.toString() }
         binding.templateType.text = getString(
-            if (viewModel.isWhiteList) R.string.whitelist else R.string.blacklist
+            if (viewModel.isWhitelist) R.string.whitelist else R.string.blacklist
         )
-        binding.targetApps.text = getString(
-            if (viewModel.isWhiteList) R.string.template_target_whitelist_title
+        binding.templatePackages.text = getString(
+            if (viewModel.isWhitelist) R.string.template_target_whitelist_title
             else R.string.template_target_blacklist_title
         )
-        binding.appliedApps.text = getString(R.string.template_scope_title)
-        binding.targetApps.setOnClickListener {
+        binding.appliedPackages.text = getString(R.string.template_scope_title)
+        binding.templatePackages.setOnClickListener {
             setFragmentResultListener("app_select") { _, bundle ->
-                viewModel.targetAppList.value = bundle.getStringArrayList("checked")!!
+                viewModel.templatePackages.value =
+                    bundle.getStringArrayList("selectedPackages")!!
                 clearFragmentResultListener("app_select")
             }
             val args = ScopeFragmentArgs(
                 filterOnlyEnabled = false,
-                checked = viewModel.targetAppList.value.toTypedArray(),
+                selectedPackages = viewModel.templatePackages.value.toTypedArray(),
                 title = getString(
-                    if (viewModel.isWhiteList) R.string.template_target_whitelist_picker_title
+                    if (viewModel.isWhitelist) R.string.template_target_whitelist_picker_title
                     else R.string.template_target_blacklist_picker_title
                 )
             )
             navController.navigate(R.id.nav_scope, args.toBundle())
         }
-        binding.appliedApps.setOnClickListener {
+        binding.appliedPackages.setOnClickListener {
             setFragmentResultListener("app_select") { _, bundle ->
-                viewModel.appliedAppList.value = bundle.getStringArrayList("checked")!!
+                viewModel.appliedPackages.value =
+                    bundle.getStringArrayList("selectedPackages")!!
                 clearFragmentResultListener("app_select")
             }
             val args = ScopeFragmentArgs(
                 filterOnlyEnabled = true,
-                isWhiteList = viewModel.isWhiteList,
-                checked = viewModel.appliedAppList.value.toTypedArray(),
+                isWhitelist = viewModel.isWhitelist,
+                selectedPackages = viewModel.appliedPackages.value.toTypedArray(),
                 title = getString(R.string.template_scope_picker_title)
             )
             navController.navigate(R.id.nav_scope, args.toBundle())
         }
 
         lifecycleScope.launch {
-            viewModel.targetAppList.collect {
+            viewModel.templatePackages.collect {
                 val fmt =
-                    if (viewModel.isWhiteList) R.string.template_apps_visible_count
+                    if (viewModel.isWhitelist) R.string.template_apps_visible_count
                     else R.string.template_apps_invisible_count
-                binding.targetApps.summary = String.format(getString(fmt), it.size)
+                binding.templatePackages.summary = String.format(getString(fmt), it.size)
             }
         }
         lifecycleScope.launch {
-            viewModel.appliedAppList.collect {
-                binding.appliedApps.summary = if (it.isEmpty()) {
+            viewModel.appliedPackages.collect {
+                binding.appliedPackages.summary = if (it.isEmpty()) {
                     getString(R.string.template_not_applied)
                 } else {
                     String.format(getString(R.string.template_applied_count), it.size)

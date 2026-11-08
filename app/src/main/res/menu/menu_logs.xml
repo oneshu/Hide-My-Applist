@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/menu_refresh"
         android:icon="@drawable/baseline_refresh_24"
@@ -22,26 +21,12 @@
         <menu>
             <group android:checkableBehavior="single">
                 <item
-                    android:id="@+id/menu_filter_debug"
-                    android:title="Debug"
-                    tools:ignore="HardcodedText" />
+                    android:id="@+id/menu_filter_all"
+        android:title="@string/logs_filter_all" />
                 <item
-                    android:id="@+id/menu_filter_info"
-                    android:title="Info"
-                    tools:ignore="HardcodedText" />
-                <item
-                    android:id="@+id/menu_filter_warn"
-                    android:title="Warn"
-                    tools:ignore="HardcodedText" />
-                <item
-                    android:id="@+id/menu_filter_error"
-                    android:title="Error"
-                    tools:ignore="HardcodedText" />
+                    android:id="@+id/menu_filter_issues"
+                    android:title="@string/logs_filter_issues" />
             </group>
         </menu>
     </item>
-    <item
-        android:id="@+id/menu_reverse_order"
-        android:checkable="true"
-        android:title="@string/list_reverse_order" />
 </menu>

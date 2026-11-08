@@ -30,7 +30,6 @@
             android:layout_marginTop="10dp"
             android:hint="@string/template_name"
             android:paddingHorizontal="@dimen/item_padding_horizontal"
-            android:transitionName="transition_manage"
             app:startIconDrawable="@drawable/outline_edit_24">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -63,7 +62,7 @@
             android:textColor="?colorPrimary" />
 
         <icu.nullptr.hidemyapplist.ui.view.ListItemView
-            android:id="@+id/target_apps"
+            android:id="@+id/template_packages"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:buttonText="@string/edit_list"
@@ -87,7 +86,7 @@
             android:textColor="?android:attr/textColorSecondary" />
 
         <icu.nullptr.hidemyapplist.ui.view.ListItemView
-            android:id="@+id/applied_apps"
+            android:id="@+id/applied_packages"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:buttonText="@string/edit_list"

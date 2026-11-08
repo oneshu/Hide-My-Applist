@@ -26,7 +26,7 @@ class PmsHookTarget36(private val service: HMAService) : IFrameworkHook {
 
     private var hook: XC_MethodHook.Unhook? = null
     private var archivedPackageHook: XC_MethodHook.Unhook? = null
-    private val lastFilteredApp = AtomicReference<String?>(null)
+    private val lastFilteredCaller = AtomicReference<String?>(null)
 
     @Suppress("UNCHECKED_CAST")
     override fun load() {
@@ -38,17 +38,17 @@ class PmsHookTarget36(private val service: HMAService) : IFrameworkHook {
                 val snapshot = param.args[0]
                 val callingUid = param.args[1] as Int
                 if (callingUid == Constants.UID_SYSTEM) return@hookBefore
-                val callingApps = Utils.binderLocalScope {
+                val callingPackages = Utils.binderLocalScope {
                     getPackagesForUidMethod.invoke(snapshot, callingUid) as Array<String>?
                 } ?: return@hookBefore
-                val targetApp = Utils.getPackageNameFromPackageSettings(param.args[3])
-                for (caller in callingApps) {
-                    if (service.shouldHide(caller, targetApp)) {
+                val targetPackage = Utils.getPackageNameFromPackageSettings(param.args[3])
+                for (caller in callingPackages) {
+                    if (service.shouldHide(caller, targetPackage)) {
                         param.result = true
                         service.incrementFilterCount()
-                        val last = lastFilteredApp.getAndSet(caller)
+                        val last = lastFilteredCaller.getAndSet(caller)
                         if (last != caller) logI(TAG, "@shouldFilterApplication: query from $caller")
-                        logD(TAG, "@shouldFilterApplication caller: $callingUid $caller, target: $targetApp")
+                        logD(TAG, "@shouldFilterApplication caller: $callingUid $caller, target: $targetPackage")
                         return@hookBefore
                     }
                 }
@@ -66,17 +66,17 @@ class PmsHookTarget36(private val service: HMAService) : IFrameworkHook {
                 runCatching {
                     val callingUid = Binder.getCallingUid()
                     if (callingUid == Constants.UID_SYSTEM) return@hookBefore
-                    val callingApps = Utils.binderLocalScope {
+                    val callingPackages = Utils.binderLocalScope {
                         service.pms.getPackagesForUid(callingUid)
                     } ?: return@hookBefore
-                    val targetApp = param.args[0].toString()
-                    for (caller in callingApps) {
-                        if (service.shouldHide(caller, targetApp)) {
+                    val targetPackage = param.args[0].toString()
+                    for (caller in callingPackages) {
+                        if (service.shouldHide(caller, targetPackage)) {
                             param.result = null
                             service.incrementFilterCount()
-                            val last = lastFilteredApp.getAndSet(caller)
+                            val last = lastFilteredCaller.getAndSet(caller)
                             if (last != caller) logI(TAG, "@getArchivedPackageInternal: query from $caller")
-                            logD(TAG, "@getArchivedPackageInternal caller: $callingUid $caller, target: $targetApp")
+                            logD(TAG, "@getArchivedPackageInternal caller: $callingUid $caller, target: $targetPackage")
                             return@hookBefore
                         }
                     }

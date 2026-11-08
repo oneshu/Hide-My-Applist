@@ -3,46 +3,59 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:minHeight="72dp"
     android:orientation="horizontal">
-
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/level"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:paddingHorizontal="4dp"
-        android:textAppearance="?textAppearanceTitleSmall"
-        android:textColor="@android:color/white"
-        tools:background="@color/info"
-        tools:text="I" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingHorizontal="6dp"
-        android:paddingVertical="4dp">
+        android:paddingHorizontal="16dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="12dp">
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/tag"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?textAppearanceTitleSmall"
-            tools:text="HMA-Bridge" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/tag"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAppearance="?textAppearanceTitleSmall"
+                tools:text="系统服务" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:textAppearance="?textAppearanceLabelSmall"
+                tools:text="11-09 00:06:44" />
+        </LinearLayout>
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/message"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="2dp"
-            android:textAppearance="?textAppearanceBodySmall"
-            tools:text="HMA service initialized" />
+            android:layout_marginTop="4dp"
+            android:textAppearance="?textAppearanceBodyMedium"
+            tools:text="隐藏应用列表服务已启动" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/date"
-            android:layout_width="wrap_content"
+            android:id="@+id/raw_details"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="monospace"
             android:textAppearance="?textAppearanceBodySmall"
-            tools:text="19-19 11:45:14" />
+            android:textColor="?android:attr/textColorSecondary"
+            android:textIsSelectable="true"
+            tools:text="HMA service initialized" />
+
     </LinearLayout>
 </LinearLayout>

@@ -8,21 +8,21 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 class TemplateSettingsViewModel(
     val originalName: String?,
-    val isWhiteList: Boolean,
+    val isWhitelist: Boolean,
     var name: String?
 ) : ViewModel() {
 
     class Factory(private val args: TemplateSettingsFragmentArgs) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(TemplateSettingsViewModel::class.java)) {
-                val viewModel = TemplateSettingsViewModel(args.name, args.isWhiteList, args.name)
+                val viewModel = TemplateSettingsViewModel(args.name, args.isWhitelist, args.name)
                 args.name?.let {
-                    val appliedAppList = ConfigManager.getTemplateAppliedAppList(it)
-                    val targetAppList = ConfigManager.getTemplateTargetAppList(it)
-                    viewModel.appliedAppList.value = appliedAppList
-                    viewModel.targetAppList.value = targetAppList
-                    viewModel.originalAppliedAppList.addAll(appliedAppList)
-                    viewModel.originalTargetAppList.addAll(targetAppList)
+                    val appliedPackages = ConfigManager.getTemplateAppliedPackages(it)
+                    val templatePackages = ConfigManager.getTemplatePackages(it)
+                    viewModel.appliedPackages.value = appliedPackages
+                    viewModel.templatePackages.value = templatePackages
+                    viewModel.originalAppliedPackages.addAll(appliedPackages)
+                    viewModel.originalTemplatePackages.addAll(templatePackages)
                 }
                 @Suppress("UNCHECKED_CAST")
                 return viewModel as T
@@ -30,14 +30,14 @@ class TemplateSettingsViewModel(
         }
     }
 
-    val appliedAppList = MutableStateFlow<ArrayList<String>>(ArrayList())
-    val targetAppList = MutableStateFlow<ArrayList<String>>(ArrayList())
-    private val originalAppliedAppList = ArrayList<String>()
-    private val originalTargetAppList = ArrayList<String>()
+    val appliedPackages = MutableStateFlow<ArrayList<String>>(ArrayList())
+    val templatePackages = MutableStateFlow<ArrayList<String>>(ArrayList())
+    private val originalAppliedPackages = ArrayList<String>()
+    private val originalTemplatePackages = ArrayList<String>()
 
     fun hasUnsavedChanges(): Boolean {
         return name?.trim().orEmpty() != originalName.orEmpty() ||
-                appliedAppList.value.toSet() != originalAppliedAppList.toSet() ||
-                targetAppList.value.toSet() != originalTargetAppList.toSet()
+                appliedPackages.value.toSet() != originalAppliedPackages.toSet() ||
+                templatePackages.value.toSet() != originalTemplatePackages.toSet()
     }
 }

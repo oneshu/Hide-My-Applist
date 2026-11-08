@@ -13,7 +13,7 @@ object ConfigManager {
 
     data class TemplateInfo(
         val name: String?,
-        val isWhiteList: Boolean,
+        val isWhitelist: Boolean,
         val appCount: Int = 0,
         val appliedCount: Int = 0
     )
@@ -42,8 +42,15 @@ object ConfigManager {
     private fun saveConfig() {
         val text = config.toString()
         writeConfigFile(text)
-        ServiceClient.syncConfig(text)
+        val serviceText = if (PrefManager.globalHidingEnabled) {
+            text
+        } else {
+            config.copy(scope = mutableMapOf()).toString()
+        }
+        ServiceClient.syncConfig(serviceText)
     }
+
+    fun resyncServiceConfig() = saveConfig()
 
     private fun writeConfigFile(text: String) {
         val output = atomicConfigFile.startWrite()
@@ -64,25 +71,12 @@ object ConfigManager {
             saveConfig()
         }
 
-    var maxLogSize: Int
-        get() = config.maxLogSize
-        set(value) {
-            config.maxLogSize = value
-            saveConfig()
-        }
-
     var forceMountData: Boolean
         get() = config.forceMountData
         set(value) {
             config.forceMountData = value
             saveConfig()
         }
-
-    fun importConfig(json: String) {
-        config = JsonConfig.parse(json)
-        config.configVersion = BuildConfig.CONFIG_VERSION
-        saveConfig()
-    }
 
     fun hasTemplate(name: String?): Boolean {
         return config.templates.containsKey(name)
@@ -92,7 +86,7 @@ object ConfigManager {
         return config.templates.mapTo(mutableListOf()) { (name, template) ->
             TemplateInfo(
                 name = name,
-                isWhiteList = template.isWhitelist,
+                isWhitelist = template.isWhitelist,
                 appCount = template.appList.size,
                 appliedCount = config.scope.count { (_, appConfig) ->
                     appConfig.applyTemplates.contains(name)
@@ -101,13 +95,13 @@ object ConfigManager {
         }
     }
 
-    fun getTemplateAppliedAppList(name: String): ArrayList<String> {
+    fun getTemplateAppliedPackages(name: String): ArrayList<String> {
         return config.scope.mapNotNullTo(ArrayList()) {
             if (it.value.applyTemplates.contains(name)) it.key else null
         }
     }
 
-    fun getTemplateTargetAppList(name: String): ArrayList<String> {
+    fun getTemplatePackages(name: String): ArrayList<String> {
         return ArrayList(config.templates[name]?.appList ?: emptyList())
     }
 
@@ -116,14 +110,16 @@ object ConfigManager {
     fun saveTemplate(
         originalName: String?,
         name: String?,
-        isWhiteList: Boolean,
-        appliedList: List<String>,
-        targetList: Set<String>
+        isWhitelist: Boolean,
+        appliedPackages: Collection<String>,
+        templatePackages: Set<String>
     ) {
-        Log.d(TAG, "saveTemplate: $originalName -> $name, apps = $targetList")
+        Log.d(TAG, "saveTemplate: $originalName -> $name, packages = $templatePackages")
         if (name == null) {
             originalName ?: return
-            config.scope.forEach { (_, appInfo) -> appInfo.applyTemplates.remove(originalName) }
+            config.scope.forEach { (_, appConfig) ->
+                appConfig.applyTemplates.remove(originalName)
+            }
             config.templates.remove(originalName)
             saveConfig()
             return
@@ -133,10 +129,10 @@ object ConfigManager {
             config.templates.remove(originalName)
             config.scope.values.forEach { it.applyTemplates.remove(originalName) }
         }
-        config.templates[name] = JsonConfig.Template(isWhiteList, targetList)
-        config.scope.forEach { (app, appInfo) ->
-            if (app in appliedList) appInfo.applyTemplates.add(name)
-            else appInfo.applyTemplates.remove(name)
+        config.templates[name] = JsonConfig.Template(isWhitelist, templatePackages)
+        config.scope.forEach { (packageName, appConfig) ->
+            if (packageName in appliedPackages) appConfig.applyTemplates.add(name)
+            else appConfig.applyTemplates.remove(name)
         }
         saveConfig()
     }

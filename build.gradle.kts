@@ -6,7 +6,6 @@ plugins {
     alias(libs.plugins.kotlin) apply false
     alias(libs.plugins.agp.app) apply false
     alias(libs.plugins.agp.lib) apply false
-    alias(libs.plugins.gms) apply false
     alias(libs.plugins.nav.safeargs.kotlin) apply false
 }
 
@@ -32,8 +31,6 @@ val androidTargetCompatibility = JavaVersion.VERSION_21
 
 val localProperties = Properties()
 localProperties.load(file("local.properties").inputStream())
-val officialBuild by extra(localProperties.getProperty("officialBuild", "false") == "true")
-
 tasks.register("clean", Delete::class) {
     delete(rootProject.layout.buildDirectory)
 }

@@ -2,14 +2,11 @@ package icu.nullptr.hidemyapplist.ui.activity
 
 import android.content.res.Resources
 import android.os.Bundle
-import androidx.core.view.isVisible
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.NavigationUI.setupWithNavController
-import com.google.android.gms.ads.MobileAds
-import com.google.android.material.color.DynamicColors
 import com.tsng.hidemyapplist.R
-import com.tsng.hidemyapplist.databinding.ActivityMainBinding
 import icu.nullptr.hidemyapplist.ui.util.ThemeUtils
 import rikka.material.app.MaterialActivity
 
@@ -17,22 +14,19 @@ class MainActivity : MaterialActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        if (ThemeUtils.isSystemAccent) DynamicColors.applyToActivityIfAvailable(this)
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
-        setupWithNavController(binding.bottomNav, navController)
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            binding.bottomNav.isVisible = destination.id in setOf(
-                R.id.nav_home,
-                R.id.nav_logs,
-                R.id.nav_settings
+        setContentView(R.layout.activity_main)
+        val navHost = findViewById<android.view.View>(R.id.nav_host_fragment)
+        ViewCompat.setOnApplyWindowInsetsListener(navHost) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.updatePadding(
+                left = systemBars.left,
+                top = systemBars.top,
+                right = systemBars.right,
+                bottom = systemBars.bottom
             )
+            insets
         }
-
-        MobileAds.initialize(this)
+        ViewCompat.requestApplyInsets(navHost)
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -41,10 +35,10 @@ class MainActivity : MaterialActivity() {
     }
 
     override fun onApplyUserThemeResource(theme: Resources.Theme, isDecorView: Boolean) {
-        if (!ThemeUtils.isSystemAccent) theme.applyStyle(ThemeUtils.colorThemeStyleRes, true)
-        theme.applyStyle(ThemeUtils.getNightThemeStyleRes(this), true)
+        theme.applyStyle(ThemeUtils.colorThemeStyleRes, true)
+        theme.applyStyle(ThemeUtils.nightThemeStyleRes, true)
     }
 
-    override fun computeUserThemeKey() = ThemeUtils.colorTheme + ThemeUtils.getNightThemeStyleRes(this)
+    override fun computeUserThemeKey() = "MATERIAL_BLUE_${ThemeUtils.nightThemeStyleRes}"
 
 }

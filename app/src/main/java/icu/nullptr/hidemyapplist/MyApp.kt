@@ -10,7 +10,6 @@ import icu.nullptr.hidemyapplist.ui.receiver.AppChangeReceiver
 import icu.nullptr.hidemyapplist.ui.util.makeToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import me.zhanghai.android.appiconloader.AppIconLoader
 import rikka.material.app.LocaleDelegate
 import java.util.*
 import kotlin.system.exitProcess
@@ -23,10 +22,6 @@ class MyApp : Application() {
     var isHooked = false
 
     val globalScope = CoroutineScope(Dispatchers.Default)
-    val appIconLoader by lazy {
-        val iconSize = resources.getDimensionPixelSize(R.dimen.app_icon_size)
-        AppIconLoader(iconSize, false, this)
-    }
 
     @Suppress("DEPRECATION")
     @SuppressLint("SdCardPath")

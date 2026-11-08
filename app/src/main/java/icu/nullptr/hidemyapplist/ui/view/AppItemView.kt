@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.widget.LinearLayout
 import by.kirich1409.viewbindingdelegate.CreateMethod
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.tsng.hidemyapplist.R
 import com.tsng.hidemyapplist.databinding.AppItemViewBinding
 import icu.nullptr.hidemyapplist.util.PackageHelper
 
@@ -17,10 +18,17 @@ class AppItemView @JvmOverloads constructor(
 
     private val binding by viewBinding<AppItemViewBinding>(createMethod = CreateMethod.INFLATE)
 
-    var showEnabled: Boolean
-        get() = binding.enabled.visibility == VISIBLE
+    var isWhitelist: Boolean?
+        get() = if (binding.enabled.visibility == VISIBLE) binding.enabled.tag as? Boolean else null
         set(value) {
-            binding.enabled.visibility = if (value) VISIBLE else GONE
+            binding.enabled.tag = value
+            binding.enabled.visibility = if (value == null) GONE else VISIBLE
+            if (value != null) {
+                binding.enabled.text = context.getString(
+                    if (value) R.string.app_whitelist_mode
+                    else R.string.app_blacklist_mode
+                )
+            }
         }
 
     var isChecked: Boolean
@@ -36,6 +44,6 @@ class AppItemView @JvmOverloads constructor(
     fun load(packageName: String) {
         binding.packageName.text = packageName
         binding.label.text = PackageHelper.loadAppLabel(packageName)
-        binding.icon.setImageBitmap(PackageHelper.loadAppIcon(packageName))
+        binding.icon.setImageDrawable(PackageHelper.loadAppIcon(packageName))
     }
 }

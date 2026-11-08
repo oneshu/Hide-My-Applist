@@ -1,35 +1,95 @@
-# Hide My Applist（Android 16 专用分支）
+# Hide My Applist（Android 16）
 
-这是一个仅面向 Android 16 的个人维护分支，基于
-[oneshu/Hide-My-Applist](https://github.com/oneshu/Hide-My-Applist)。
+一个只面向 Android 16 的个人维护版本，用于限制指定应用读取设备上的应用列表。
 
-## 目标平台
+当前源码位于
+[oneshu/Hide-My-Applist](https://github.com/oneshu/Hide-My-Applist)
+的 `feature/template-manual-save` 分支。
+
+## 主要功能
+
+- 黑名单模板：隐藏模板中选中的应用，其余应用保持可见。
+- 白名单模板：只保留模板中选中的应用可见。
+- 模板可应用到指定应用，模板和具体应用分别管理。
+- 支持为单个应用额外选择应用，不修改原模板。
+- 白名单模式下可让全部系统应用保持可见。
+- 模板采用手动保存；存在未保存修改时，退出前会提示。
+- 配置修改实时同步，无需重启应用。
+- 首页可全局暂停 HMA 隐藏，模板和应用规则不会被清除。
+- 提供应用数据隔离开关，可选兼容 API 30 以下的应用。
+- 日志使用来源、时间和中文说明展示，并支持保存和清除。
+- 支持跟随系统、浅色、深色三种主题。
+- 支持在启动器中隐藏图标。
+- 界面使用 Android 原生控件，不使用自定义应用字体和自定义动画。
+
+## 平台要求
 
 - Android 16 / API 36
 - `minSdk = 36`
 - `targetSdk = 36`
 - `compileSdk = 36`
-- 不提供 Android 15 及更低版本的兼容代码
+- 支持 Xposed API 82 的模块加载器
 
-## 本分支改动
+Android 15 及更低版本不在此项目的支持范围内，相关兼容代码已移除。
 
-- 模板改为手动保存，未保存返回时会提示。
-- 新建、重命名、删除模板统一为一次配置写入。
-- 配置文件和运行时配置使用原子写入。
-- 适配 Android 16 的 PackageManager 应用可见性拦截。
-- 应用界面资源仅保留英语和简体中文。
-- 移除旧版本 API 分支、旧 PackageManager hook 和 Crowdin 配置。
-- GitHub Actions 只用于构建 debug APK，第三方 Action 固定到 commit SHA。
+## 安装与启用
+
+1. 安装 APK，并在 Xposed 管理器中启用模块。
+2. 模块作用域只选择“系统框架”。部分设备可能显示为“Android”。
+3. 打开应用，在首页确认模块和系统服务均已启动。
+4. 在“模板管理”中创建黑名单或白名单模板。
+5. 在“应用管理”中选择目标应用，为它启用隐藏并应用模板。
+6. 在系统日志或应用内日志中确认是否发生应用列表拦截。
+
+如果模块版本更新后系统服务仍显示旧版本，需要重新启动系统框架或设备，使新模块生效。
+
+应用数据隔离依赖系统对 PlatformCompat 数据目录隔离的支持。若系统不支持或不授予修改系统属性的权限，该开关可能无法生效。
+
+## 使用说明
+
+### 黑名单
+
+只有选中的应用会被隐藏，未选中的应用保持可见。
+
+### 白名单
+
+只有选中的应用保持可见，其他应用全部隐藏。开启“所有系统应用保持可见”后，系统应用无需逐个选择。
+
+### 模板与额外应用
+
+- “使用已有模板”用于带入一组可复用的应用名单。
+- “单独选择应用”只影响当前目标应用，不会修改模板。
+- 切换黑名单或白名单会清空当前名单，需要重新选择。
 
 ## 构建
 
-在 GitHub Actions 中手动运行 `Pull Request` 工作流，选择
-`feature/template-manual-save` 分支。构建完成后下载 `HMA-*-debug.apk`。
+构建需要：
 
-本项目不需要原上游的签名、Google Services 或 Telegram Secrets。
+- JDK 21
+- Android SDK 36
 
-## 权限说明
+在项目根目录执行：
 
-- `QUERY_ALL_PACKAGES`：用于枚举应用并建立隐藏规则。
-- `INTERNET`：用于上游更新检查和广告组件。
-- `ServiceProvider` 只接受 `android` 包且 UID 为 system 的调用。
+```powershell
+.\gradlew.bat --no-daemon :app:assembleDebug
+```
+
+生成的 debug APK 位于：
+
+```text
+app/build/outputs/apk/debug/app-debug.apk
+```
+
+## 项目结构
+
+- `app`：管理界面、配置、日志和应用列表。
+- `common`：共享配置模型、AIDL 接口和常量。
+- `xposed`：系统框架服务、PackageManager 拦截和应用数据隔离 Hook。
+
+## 权限与隐私
+
+- `QUERY_ALL_PACKAGES`：仅在本地枚举应用，用于创建隐藏规则和选择目标应用。
+- 不申请 `INTERNET` 权限。
+- 项目不包含广告、联网更新检查、遥测或行为分析。
+- `ServiceProvider` 只接受包名为 `android` 且调用 UID 为 system 的请求。
+- 配置文件和运行时配置均采用原子写入，降低异常退出导致配置损坏的风险。

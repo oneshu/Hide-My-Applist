@@ -12,21 +12,25 @@ import icu.nullptr.hidemyapplist.ui.util.navController
 
 class ScopeFragment : AppSelectFragment() {
 
-    private lateinit var checked: MutableSet<String>
-    private lateinit var initialChecked: Set<String>
+    private lateinit var selectedPackageNames: MutableSet<String>
+    private lateinit var initialSelection: Set<String>
 
-    override val firstComparator: Comparator<String> = Comparator.comparing { !checked.contains(it) }
+    override val primaryComparator: Comparator<String> =
+        Comparator.comparing { it !in selectedPackageNames }
 
     override val adapter by lazy {
         val args by navArgs<ScopeFragmentArgs>()
-        checked = args.checked.toMutableSet()
-        initialChecked = checked.toSet()
-        if (!args.filterOnlyEnabled) AppScopeAdapter(checked, null, ::updateSelectionSummary)
-        else AppScopeAdapter(
-            checked,
-            { ConfigManager.getAppConfig(it)?.useWhitelist == args.isWhiteList },
-            ::updateSelectionSummary
-        )
+        selectedPackageNames = args.selectedPackages.toMutableSet()
+        initialSelection = selectedPackageNames.toSet()
+        if (!args.filterOnlyEnabled) {
+            AppScopeAdapter(selectedPackageNames, null, ::updateSelectionSummary)
+        } else {
+            AppScopeAdapter(
+                selectedPackageNames,
+                { ConfigManager.getAppConfig(it)?.useWhitelist == args.isWhitelist },
+                ::updateSelectionSummary
+            )
+        }
     }
 
     override fun getToolbarTitle(): CharSequence {
@@ -46,19 +50,20 @@ class ScopeFragment : AppSelectFragment() {
     }
 
     private fun updateSelectionSummary() {
-        binding.selectionSummary.text = getString(R.string.selection_count, checked.size)
-        binding.clearSelection.isEnabled = checked.isNotEmpty()
+        binding.selectionSummary.text =
+            getString(R.string.selection_count, selectedPackageNames.size)
+        binding.clearSelection.isEnabled = selectedPackageNames.isNotEmpty()
     }
 
     private fun finishSelection() {
         setFragmentResult("app_select", Bundle().apply {
-            putStringArrayList("checked", ArrayList(checked))
+            putStringArrayList("selectedPackages", ArrayList(selectedPackageNames))
         })
         navController.navigateUp()
     }
 
     override fun onBack() {
-        if (checked == initialChecked) {
+        if (selectedPackageNames == initialSelection) {
             navController.navigateUp()
             return
         }

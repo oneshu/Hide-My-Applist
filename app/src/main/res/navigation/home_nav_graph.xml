@@ -22,7 +22,7 @@
             app:argType="string"
             app:nullable="true" />
         <argument
-            android:name="isWhiteList"
+            android:name="isWhitelist"
             app:argType="boolean" />
     </fragment>
     <fragment
@@ -45,11 +45,11 @@
             android:name="filterOnlyEnabled"
             app:argType="boolean" />
         <argument
-            android:name="isWhiteList"
+            android:name="isWhitelist"
             android:defaultValue="false"
             app:argType="boolean" />
         <argument
-            android:name="checked"
+            android:name="selectedPackages"
             app:argType="string[]" />
         <argument
             android:name="title"

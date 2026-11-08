@@ -89,7 +89,4 @@ object ServiceClient : IHMAService, DeathRecipient {
         getServiceLegacy()?.syncConfig(json)
     }
 
-    override fun stopService(cleanEnv: Boolean) {
-        getServiceLegacy()?.stopService(cleanEnv)
-    }
 }

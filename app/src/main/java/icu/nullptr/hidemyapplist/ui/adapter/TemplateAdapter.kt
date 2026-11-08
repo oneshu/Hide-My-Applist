@@ -12,9 +12,7 @@ class TemplateAdapter(
     private val onClickListener: ((ConfigManager.TemplateInfo) -> Unit)?
 ) : RecyclerView.Adapter<TemplateAdapter.ViewHolder>() {
 
-    private var allTemplates: List<ConfigManager.TemplateInfo> = emptyList()
     private var list: List<ConfigManager.TemplateInfo> = emptyList()
-    private var whiteListFilter: Boolean? = null
 
     init {
         updateList()
@@ -30,13 +28,14 @@ class TemplateAdapter(
         fun bind(info: ConfigManager.TemplateInfo) {
             with(itemView as ListItemView) {
                 setIcon(
-                    if (info.isWhiteList) R.drawable.outline_assignment_24
+                    if (info.isWhitelist) R.drawable.outline_assignment_24
                     else R.drawable.baseline_assignment_24
                 )
                 text = info.name
-                badgeText = context.getString(if (info.isWhiteList) R.string.whitelist else R.string.blacklist)
+                badgeText =
+                    context.getString(if (info.isWhitelist) R.string.whitelist else R.string.blacklist)
                 summary = context.getString(
-                    if (info.isWhiteList) R.string.template_list_whitelist_summary
+                    if (info.isWhitelist) R.string.template_list_whitelist_summary
                     else R.string.template_list_blacklist_summary,
                     info.appCount,
                     if (info.appliedCount == 0) context.getString(R.string.template_not_applied)
@@ -62,25 +61,15 @@ class TemplateAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(list[position])
 
     fun updateList() {
-        allTemplates = ConfigManager.getTemplateList().apply {
-            sortWith { o1, o2 ->
-                if (o1.isWhiteList != o2.isWhiteList) {
-                    o1.isWhiteList.compareTo(o2.isWhiteList)
+        list = ConfigManager.getTemplateList().apply {
+            sortWith { first, second ->
+                if (first.isWhitelist != second.isWhitelist) {
+                    first.isWhitelist.compareTo(second.isWhitelist)
                 } else {
-                    Collator.getInstance(Locale.getDefault()).compare(o1.name, o2.name)
+                    Collator.getInstance(Locale.getDefault()).compare(first.name, second.name)
                 }
             }
         }
-        applyFilter()
-    }
-
-    fun filterByType(isWhiteList: Boolean?) {
-        whiteListFilter = isWhiteList
-        applyFilter()
-    }
-
-    private fun applyFilter() {
-        list = allTemplates.filter { whiteListFilter == null || it.isWhiteList == whiteListFilter }
         notifyDataSetChanged()
     }
 }

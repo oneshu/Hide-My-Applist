@@ -29,21 +29,27 @@
             tools:text="@tools:sample/full_names" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/enabled"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/enabled"
-            android:textColor="?colorPrimary"
-            android:visibility="gone"
-            tools:visibility="visible" />
-
-        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/package_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             tools:text="com.example.app" />
     </LinearLayout>
 
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/enabled"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/bg_template_badge"
+        android:backgroundTint="?attr/colorPrimaryContainer"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="2dp"
+        android:textAppearance="?textAppearanceLabelMedium"
+        android:textColor="?attr/colorOnPrimaryContainer"
+        android:visibility="gone"
+        tools:text="@string/app_blacklist_mode"
+        tools:visibility="visible" />
 
     <com.google.android.material.checkbox.MaterialCheckBox
         android:id="@+id/checkbox"

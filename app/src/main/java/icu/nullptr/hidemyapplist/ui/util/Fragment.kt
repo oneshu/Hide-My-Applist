@@ -1,13 +1,10 @@
 package icu.nullptr.hidemyapplist.ui.util
 
-import android.view.Menu
-import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import androidx.annotation.DrawableRes
 import androidx.annotation.MenuRes
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.NavHostFragment
 
@@ -25,21 +22,15 @@ fun Fragment.setupToolbar(
     navigationIcon?.let { toolbar.setNavigationIcon(navigationIcon) }
     toolbar.title = title
     toolbar.tooltipText = title
+    toolbar.menu.clear()
     if (menuRes != null) {
-        val menuProvider = object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                menuInflater.inflate(menuRes, menu)
-            }
-
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                return onMenuOptionSelected?.let {
-                    it(menuItem); true
-                } ?: false
-            }
-        }
         toolbar.inflateMenu(menuRes)
-        toolbar.setOnMenuItemClickListener(menuProvider::onMenuItemSelected)
-        requireActivity().addMenuProvider(menuProvider)
-        menuProvider.onPrepareMenu(toolbar.menu)
+        toolbar.setOnMenuItemClickListener { item ->
+            val handler = onMenuOptionSelected ?: return@setOnMenuItemClickListener false
+            handler(item)
+            true
+        }
+    } else {
+        toolbar.setOnMenuItemClickListener(null)
     }
 }

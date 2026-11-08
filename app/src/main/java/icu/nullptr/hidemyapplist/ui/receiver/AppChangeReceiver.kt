@@ -30,7 +30,7 @@ class AppChangeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action in actions) {
             Log.i(TAG, "Received intent: $intent")
-            PackageHelper.invalidateCache()
+            PackageHelper.refreshPackages()
         }
     }
 }

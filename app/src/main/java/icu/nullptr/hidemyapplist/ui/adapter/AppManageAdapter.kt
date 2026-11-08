@@ -11,14 +11,14 @@ class AppManageAdapter(
     inner class ViewHolder(view: AppItemView) : AppSelectAdapter.ViewHolder(view) {
         init {
             view.setOnClickListener {
-                onItemClickListener.invoke(filteredList[absoluteAdapterPosition])
+                onItemClickListener.invoke(visiblePackages[absoluteAdapterPosition])
             }
         }
 
         override fun bind(packageName: String) {
             (itemView as AppItemView).let {
                 it.load(packageName)
-                it.showEnabled = ConfigManager.isHideEnabled(packageName)
+                it.isWhitelist = ConfigManager.getAppConfig(packageName)?.useWhitelist
             }
         }
     }

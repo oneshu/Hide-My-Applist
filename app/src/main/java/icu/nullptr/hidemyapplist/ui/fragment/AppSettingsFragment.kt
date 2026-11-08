@@ -3,7 +3,6 @@ package icu.nullptr.hidemyapplist.ui.fragment
 import android.os.Bundle
 import android.view.View
 import androidx.activity.addCallback
-import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.clearFragmentResultListener
 import androidx.fragment.app.setFragmentResultListener
@@ -16,6 +15,7 @@ import com.tsng.hidemyapplist.R
 import com.tsng.hidemyapplist.databinding.FragmentSettingsBinding
 import icu.nullptr.hidemyapplist.common.JsonConfig
 import icu.nullptr.hidemyapplist.service.ConfigManager
+import icu.nullptr.hidemyapplist.ui.preference.WorkModePreference
 import icu.nullptr.hidemyapplist.ui.util.navController
 import icu.nullptr.hidemyapplist.ui.util.setupToolbar
 import icu.nullptr.hidemyapplist.ui.viewmodel.AppSettingsViewModel
@@ -23,31 +23,42 @@ import icu.nullptr.hidemyapplist.util.PackageHelper
 
 class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
 
+    private data class SettingsSnapshot(
+        val hideEnabled: Boolean,
+        val config: JsonConfig.AppConfig
+    )
+
     private val binding by viewBinding<FragmentSettingsBinding>()
-    private var savedState: Pair<Boolean, JsonConfig.AppConfig>? = null
+    private var savedSnapshot: SettingsSnapshot? = null
     private val viewModel by viewModels<AppSettingsViewModel>() {
         val args by navArgs<AppSettingsFragmentArgs>()
-        val cfg = ConfigManager.getAppConfig(args.packageName)
-        val pack = if (cfg != null) AppSettingsViewModel.Pack(args.packageName, true, cfg)
-        else AppSettingsViewModel.Pack(args.packageName, false, JsonConfig.AppConfig())
-        AppSettingsViewModel.Factory(pack)
+        val appConfig = ConfigManager.getAppConfig(args.packageName)
+        val state = if (appConfig != null) {
+            AppSettingsViewModel.State(args.packageName, true, appConfig)
+        } else {
+            AppSettingsViewModel.State(args.packageName, false, JsonConfig.AppConfig())
+        }
+        AppSettingsViewModel.Factory(state)
     }
 
-    private fun currentState(): Pair<Boolean, JsonConfig.AppConfig> {
-        val pack = viewModel.pack
-        val config = pack.config.copy(
-            applyTemplates = pack.config.applyTemplates.toMutableSet(),
-            extraAppList = pack.config.extraAppList.toMutableSet()
+    private fun currentSnapshot(): SettingsSnapshot {
+        val state = viewModel.state
+        val config = state.config.copy(
+            applyTemplates = state.config.applyTemplates.toMutableSet(),
+            extraAppList = state.config.extraAppList.toMutableSet()
         )
-        return pack.enabled to config
+        return SettingsSnapshot(state.hideEnabled, config)
     }
 
     private fun saveConfig() {
-        val state = currentState()
-        if (state == savedState) return
-        val pack = viewModel.pack
-        ConfigManager.setAppConfig(pack.app, state.second.takeIf { pack.enabled })
-        savedState = state
+        val snapshot = currentSnapshot()
+        if (snapshot == savedSnapshot) return
+        val state = viewModel.state
+        ConfigManager.setAppConfig(
+            state.packageName,
+            snapshot.config.takeIf { state.hideEnabled }
+        )
+        savedSnapshot = snapshot
     }
 
     private fun onBack() {
@@ -57,7 +68,7 @@ class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        savedState = currentState()
+        savedSnapshot = currentSnapshot()
     }
 
     override fun onPause() {
@@ -86,22 +97,20 @@ class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
         }
     }
 
-    class AppPreferenceDataStore(private val pack: AppSettingsViewModel.Pack) : PreferenceDataStore() {
+    class AppPreferenceDataStore(private val state: AppSettingsViewModel.State) : PreferenceDataStore() {
 
         override fun getBoolean(key: String, defValue: Boolean): Boolean {
             return when (key) {
-                "enableHide" -> pack.enabled
-                "useWhiteList" -> pack.config.useWhitelist
-                "excludeSystemApps" -> pack.config.excludeSystemApps
+                "hideEnabled" -> state.hideEnabled
+                "excludeSystemApps" -> state.config.excludeSystemApps
                 else -> throw IllegalArgumentException("Invalid key: $key")
             }
         }
 
         override fun putBoolean(key: String, value: Boolean) {
             when (key) {
-                "enableHide" -> pack.enabled = value
-                "useWhiteList" -> pack.config.useWhitelist = value
-                "excludeSystemApps" -> pack.config.excludeSystemApps = value
+                "hideEnabled" -> state.hideEnabled = value
+                "excludeSystemApps" -> state.config.excludeSystemApps = value
                 else -> throw IllegalArgumentException("Invalid key: $key")
             }
         }
@@ -110,48 +119,111 @@ class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
     class AppPreferenceFragment : PreferenceFragmentCompat() {
 
         private val parent get() = requireParentFragment() as AppSettingsFragment
-        private val pack get() = parent.viewModel.pack
+        private val state get() = parent.viewModel.state
 
         private fun updateApplyTemplates() {
-            findPreference<Preference>("applyTemplates")?.title =
-                getString(R.string.app_template_using, pack.config.applyTemplates.size)
+            findPreference<Preference>("applyTemplates")?.apply {
+                summary = if (state.config.applyTemplates.isEmpty()) {
+                    getString(R.string.app_templates_none)
+                } else {
+                    state.config.applyTemplates.joinToString(
+                        getString(R.string.app_template_names_separator)
+                    )
+                }
+            }
         }
 
-        private fun updateExtraAppList(useWhiteList: Boolean) {
-            findPreference<Preference>("extraAppList")?.title =
-                if (useWhiteList) getString(R.string.app_extra_apps_visible_count, pack.config.extraAppList.size)
-                else getString(R.string.app_extra_apps_invisible_count, pack.config.extraAppList.size)
+        private fun updateExtraAppList() {
+            findPreference<Preference>("extraAppList")?.apply {
+                summary = if (state.config.extraAppList.isEmpty()) {
+                    getString(R.string.app_extra_apps_none)
+                } else {
+                    getString(R.string.app_extra_apps_selected, state.config.extraAppList.size)
+                }
+            }
+        }
+
+        private fun updateEnableSummary() {
+            findPreference<SwitchPreference>("hideEnabled")?.apply {
+                summary = getString(
+                    if (state.hideEnabled) R.string.app_enable_on else R.string.app_enable_off
+                )
+            }
+        }
+
+        private fun updateModeDependentPreferences() {
+            findPreference<WorkModePreference>("workMode")?.isWhitelist = state.config.useWhitelist
+            findPreference<SwitchPreference>("excludeSystemApps")?.isVisible = state.config.useWhitelist
+            findPreference<PreferenceCategory>("ruleConfigCategory")?.title = getString(
+                if (state.config.useWhitelist) R.string.app_rule_config_visible
+                else R.string.app_rule_config_hidden
+            )
+            updateEnableSummary()
+            updateApplyTemplates()
+            updateExtraAppList()
+        }
+
+        private fun applyModeChange(newModeIsWhitelist: Boolean) {
+            state.config.useWhitelist = newModeIsWhitelist
+            state.config.applyTemplates.clear()
+            state.config.extraAppList.clear()
+            updateModeDependentPreferences()
+        }
+
+        private fun requestModeChange(newModeIsWhitelist: Boolean) {
+            val modePreference = findPreference<WorkModePreference>("workMode") ?: return
+            if (state.config.useWhitelist == newModeIsWhitelist) return
+            if (state.config.applyTemplates.isEmpty() && state.config.extraAppList.isEmpty()) {
+                applyModeChange(newModeIsWhitelist)
+                return
+            }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.work_mode_switch_title)
+                .setMessage(R.string.work_mode_switch_message)
+                .setNegativeButton(android.R.string.cancel) { _, _ ->
+                    modePreference.isWhitelist = state.config.useWhitelist
+                }
+                .setPositiveButton(R.string.work_mode_switch_confirm) { _, _ ->
+                    applyModeChange(newModeIsWhitelist)
+                }
+                .setOnCancelListener {
+                    modePreference.isWhitelist = state.config.useWhitelist
+                }
+                .show()
         }
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-            preferenceManager.preferenceDataStore = AppPreferenceDataStore(pack)
+            preferenceManager.preferenceDataStore = AppPreferenceDataStore(state)
             setPreferencesFromResource(R.xml.app_settings, rootKey)
             findPreference<Preference>("appInfo")?.let {
-                it.icon = PackageHelper.loadAppIcon(pack.app).toDrawable(resources)
-                it.title = PackageHelper.loadAppLabel(pack.app)
-                it.summary = PackageHelper.loadPackageInfo(pack.app).packageName
+                it.isSelectable = false
+                it.icon = PackageHelper.loadAppIcon(state.packageName)
+                it.title = PackageHelper.loadAppLabel(state.packageName)
+                it.summary = PackageHelper.loadPackageInfo(state.packageName).packageName
             }
-            findPreference<SwitchPreference>("useWhiteList")?.setOnPreferenceChangeListener { _, newValue ->
-                pack.config.applyTemplates.clear()
-                pack.config.extraAppList.clear()
-                updateApplyTemplates()
-                updateExtraAppList(newValue as Boolean)
+            findPreference<SwitchPreference>("hideEnabled")?.setOnPreferenceChangeListener { _, _ ->
+                view?.post { updateModeDependentPreferences() }
                 true
             }
+            findPreference<WorkModePreference>("workMode")?.setOnModeChangedListener(
+                ::requestModeChange
+            )
             findPreference<Preference>("applyTemplates")?.setOnPreferenceClickListener {
                 val templates = ConfigManager.getTemplateList().mapNotNull {
-                    if (it.isWhiteList == pack.config.useWhitelist) it.name else null
+                    if (it.isWhitelist == state.config.useWhitelist) it.name else null
                 }.toTypedArray()
-                val checked = templates.map {
-                    pack.config.applyTemplates.contains(it)
+                val selectedTemplates = templates.map {
+                    state.config.applyTemplates.contains(it)
                 }.toBooleanArray()
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle(R.string.app_choose_template)
-                    .setMultiChoiceItems(templates, checked) { _, i, value -> checked[i] = value }
+                    .setMultiChoiceItems(templates, selectedTemplates) { _, index, value ->
+                        selectedTemplates[index] = value
+                    }
                     .setNegativeButton(android.R.string.cancel, null)
                     .setPositiveButton(android.R.string.ok) { _, _ ->
-                        pack.config.applyTemplates = templates.mapIndexedNotNullTo(mutableSetOf()) { i, name ->
-                            if (checked[i]) name else null
+                        state.config.applyTemplates = templates.mapIndexedNotNullTo(mutableSetOf()) { i, name ->
+                            if (selectedTemplates[i]) name else null
                         }
                         updateApplyTemplates()
                     }
@@ -160,24 +232,24 @@ class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
             }
             findPreference<Preference>("extraAppList")?.setOnPreferenceClickListener {
                 parent.setFragmentResultListener("app_select") { _, bundle ->
-                    pack.config.extraAppList = bundle.getStringArrayList("checked")!!.toMutableSet()
-                    updateExtraAppList(pack.config.useWhitelist)
+                    state.config.extraAppList =
+                        bundle.getStringArrayList("selectedPackages")!!.toMutableSet()
+                    updateExtraAppList()
                     parent.clearFragmentResultListener("app_select")
                 }
 
                 val args = ScopeFragmentArgs(
                     filterOnlyEnabled = false,
-                    checked = pack.config.extraAppList.toTypedArray(),
+                    selectedPackages = state.config.extraAppList.toTypedArray(),
                     title = getString(
-                        if (pack.config.useWhitelist) R.string.app_extra_apps_visible_title
+                        if (state.config.useWhitelist) R.string.app_extra_apps_visible_title
                         else R.string.app_extra_apps_invisible_title
                     )
                 )
                 parent.navController.navigate(R.id.nav_scope, args.toBundle())
                 true
             }
-            updateApplyTemplates()
-            updateExtraAppList(pack.config.useWhitelist)
+            updateModeDependentPreferences()
         }
     }
 }

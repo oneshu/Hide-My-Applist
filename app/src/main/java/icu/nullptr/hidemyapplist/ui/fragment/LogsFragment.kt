@@ -16,6 +16,7 @@ import icu.nullptr.hidemyapplist.service.PrefManager
 import icu.nullptr.hidemyapplist.service.ServiceClient
 import icu.nullptr.hidemyapplist.ui.adapter.LogAdapter
 import icu.nullptr.hidemyapplist.ui.util.makeToast
+import icu.nullptr.hidemyapplist.ui.util.navController
 import icu.nullptr.hidemyapplist.ui.util.setupToolbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,7 +39,7 @@ class LogsFragment : Fragment(R.layout.fragment_logs) {
                 return@save
             }
             hmaApp.contentResolver.openOutputStream(uri).use { output ->
-                if (output == null) makeToast(R.string.home_export_failed)
+                if (output == null) makeToast(R.string.logs_save_failed)
                 else output.write(logCache!!.toByteArray())
             }
             makeToast(R.string.logs_saved)
@@ -50,22 +51,22 @@ class LogsFragment : Fragment(R.layout.fragment_logs) {
                 val cache = ServiceClient.logs
                 cache to cache?.split("\n")?.let { raw ->
                     buildList {
-                        val cur = StringBuilder()
+                        val currentEntry = StringBuilder()
                         for (line in raw) {
                             if (line.startsWith('[')) {
-                                if (cur.isNotEmpty()) {
-                                    val log = LogAdapter.parseLog(cur.toString())
+                                if (currentEntry.isNotEmpty()) {
+                                    val log = LogAdapter.parseLog(currentEntry.toString())
                                     if (log != null) add(log)
                                 }
-                                cur.clear()
+                                currentEntry.clear()
                             }
-                            cur.append(line)
+                            currentEntry.append(line)
                         }
-                        if (cur.isNotEmpty()) {
-                            val log = LogAdapter.parseLog(cur.toString())
+                        if (currentEntry.isNotEmpty()) {
+                            val log = LogAdapter.parseLog(currentEntry.toString())
                             if (log != null) add(log)
                         }
-                        if (!PrefManager.logFilter_reverseOrder) reverse()
+                        reverse()
                     }
                 }
             }
@@ -90,29 +91,14 @@ class LogsFragment : Fragment(R.layout.fragment_logs) {
                 ServiceClient.clearLogs()
                 updateLogs()
             }
-            R.id.menu_filter_debug -> {
+            R.id.menu_filter_all -> {
                 item.isChecked = true
-                PrefManager.logFilter_level = 0
+                PrefManager.logFilterLevel = 0
                 updateLogs()
             }
-            R.id.menu_filter_info -> {
+            R.id.menu_filter_issues -> {
                 item.isChecked = true
-                PrefManager.logFilter_level = 1
-                updateLogs()
-            }
-            R.id.menu_filter_warn -> {
-                item.isChecked = true
-                PrefManager.logFilter_level = 2
-                updateLogs()
-            }
-            R.id.menu_filter_error -> {
-                item.isChecked = true
-                PrefManager.logFilter_level = 3
-                updateLogs()
-            }
-            R.id.menu_reverse_order -> {
-                item.isChecked = !item.isChecked
-                PrefManager.logFilter_reverseOrder = item.isChecked
+                PrefManager.logFilterLevel = 2
                 updateLogs()
             }
         }
@@ -122,18 +108,18 @@ class LogsFragment : Fragment(R.layout.fragment_logs) {
         setupToolbar(
             toolbar = binding.toolbar,
             title = getString(R.string.title_logs),
+            navigationIcon = R.drawable.baseline_arrow_back_24,
+            navigationOnClick = { navController.navigateUp() },
             menuRes = R.menu.menu_logs,
             onMenuOptionSelected = this::onMenuOptionSelected
         )
 
         with(binding.toolbar.menu) {
-            when (PrefManager.logFilter_level) {
-                0 -> findItem(R.id.menu_filter_debug).isChecked = true
-                1 -> findItem(R.id.menu_filter_info).isChecked = true
-                2 -> findItem(R.id.menu_filter_warn).isChecked = true
-                3 -> findItem(R.id.menu_filter_error).isChecked = true
+            if (PrefManager.logFilterLevel >= 2) {
+                findItem(R.id.menu_filter_issues).isChecked = true
+            } else {
+                findItem(R.id.menu_filter_all).isChecked = true
             }
-            findItem(R.id.menu_reverse_order).isChecked = PrefManager.logFilter_reverseOrder
         }
 
         binding.list.layoutManager = LinearLayoutManager(context)

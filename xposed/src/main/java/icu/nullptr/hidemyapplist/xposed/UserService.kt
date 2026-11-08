@@ -27,8 +27,15 @@ object UserService {
                 }
                 val extras = Bundle()
                 extras.putBinder("binder", HMAService.instance)
-                val attr = AttributionSource.Builder(1000).setPackageName("android").build()
-                val reply = provider.call(attr, Constants.PROVIDER_AUTHORITY, "", null, extras)
+                val attributionSource =
+                    AttributionSource.Builder(1000).setPackageName("android").build()
+                val reply = provider.call(
+                    attributionSource,
+                    Constants.PROVIDER_AUTHORITY,
+                    "",
+                    null,
+                    extras
+                )
                 if (reply == null) {
                     logE(TAG, "Failed to send binder to app")
                     return
@@ -44,8 +51,9 @@ object UserService {
         logI(TAG, "Initialize HMAService - Version ${BuildConfig.SERVICE_VERSION}")
         val service = HMAService(pms)
         appUid = Utils.getPackageUidCompat(service.pms, Constants.APP_PACKAGE_NAME, 0, 0)
-        val appPackage = Utils.getPackageInfoCompat(service.pms, Constants.APP_PACKAGE_NAME, 0, 0)
-        if (!Utils.verifyAppSignature(appPackage.applicationInfo?.sourceDir.toString())) {
+        val appPackageInfo =
+            Utils.getPackageInfoCompat(service.pms, Constants.APP_PACKAGE_NAME, 0, 0)
+        if (!Utils.verifyAppSignature(appPackageInfo.applicationInfo?.sourceDir.toString())) {
             logE(TAG, "Fatal: App signature mismatch")
             return
         }

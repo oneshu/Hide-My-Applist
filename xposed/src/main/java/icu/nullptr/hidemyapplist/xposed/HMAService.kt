@@ -16,9 +16,9 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
     }
 
     @Volatile
-    var logcatAvailable = false
+    var isLoggingAvailable = false
 
-    private lateinit var dataDir: String
+    private lateinit var serviceDataDir: String
     private lateinit var configFile: File
     private lateinit var atomicConfigFile: AtomicFile
     private lateinit var logFile: File
@@ -40,7 +40,7 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
         if (count % 100 == 0) {
             synchronized(configLock) {
                 runCatching {
-                    File("$dataDir/filter_count").writeText(count.toString())
+                    File("$serviceDataDir/filter_count").writeText(count.toString())
                 }.onFailure {
                     logW(TAG, "Failed to persist filter count", it)
                 }
@@ -59,10 +59,10 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
     private fun searchDataDir() {
         File("/data/system").list()?.forEach {
             if (it.startsWith("hide_my_applist")) {
-                if (!this::dataDir.isInitialized) {
-                    val newDir = File("/data/misc/$it")
-                    File("/data/system/$it").renameTo(newDir)
-                    dataDir = newDir.path
+                if (!this::serviceDataDir.isInitialized) {
+                    val relocatedDir = File("/data/misc/$it")
+                    File("/data/system/$it").renameTo(relocatedDir)
+                    serviceDataDir = relocatedDir.path
                 } else {
                     File("/data/system/$it").deleteRecursively()
                 }
@@ -70,31 +70,31 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
         }
         File("/data/misc").list()?.forEach {
             if (it.startsWith("hide_my_applist")) {
-                if (!this::dataDir.isInitialized) {
-                    dataDir = "/data/misc/$it"
-                } else if (dataDir != "/data/misc/$it") {
+                if (!this::serviceDataDir.isInitialized) {
+                    serviceDataDir = "/data/misc/$it"
+                } else if (serviceDataDir != "/data/misc/$it") {
                     File("/data/misc/$it").deleteRecursively()
                 }
             }
         }
-        if (!this::dataDir.isInitialized) {
-            dataDir = "/data/misc/hide_my_applist_" + Utils.generateRandomString(16)
+        if (!this::serviceDataDir.isInitialized) {
+            serviceDataDir = "/data/misc/hide_my_applist_" + Utils.generateRandomString(16)
         }
 
-        File("$dataDir/log").mkdirs()
-        configFile = File("$dataDir/config.json")
+        File("$serviceDataDir/log").mkdirs()
+        configFile = File("$serviceDataDir/config.json")
         atomicConfigFile = AtomicFile(configFile)
-        logFile = File("$dataDir/log/runtime.log")
-        oldLogFile = File("$dataDir/log/old.log")
+        logFile = File("$serviceDataDir/log/runtime.log")
+        oldLogFile = File("$serviceDataDir/log/old.log")
         logFile.renameTo(oldLogFile)
         logFile.createNewFile()
 
-        logcatAvailable = true
-        logI(TAG, "Data dir: $dataDir")
+        isLoggingAvailable = true
+        logI(TAG, "Data dir: $serviceDataDir")
     }
 
     private fun loadConfig() {
-        File("$dataDir/filter_count").also {
+        File("$serviceDataDir/filter_count").also {
             runCatching {
                 if (it.exists()) filterCount.set(it.readText().toInt())
             }.onFailure { e ->
@@ -106,18 +106,18 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
             logI(TAG, "Config file not found")
             return
         }
-        val loading = runCatching {
+        val loadedConfig = runCatching {
             val json = atomicConfigFile.readFully().decodeToString()
             JsonConfig.parse(json)
         }.getOrElse {
             logE(TAG, "Failed to parse config.json", it)
             return
         }
-        if (loading.configVersion != BuildConfig.CONFIG_VERSION) {
+        if (loadedConfig.configVersion != BuildConfig.CONFIG_VERSION) {
             logW(TAG, "Config version mismatch, need to reload")
             return
         }
-        config = loading
+        config = loadedConfig
         logI(TAG, "Config loaded")
     }
 
@@ -144,36 +144,19 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
         if (appConfig.useWhitelist && appConfig.excludeSystemApps && query in systemApps) return false
 
         if (query in appConfig.extraAppList) return !appConfig.useWhitelist
-        for (tplName in appConfig.applyTemplates) {
-            val tpl = config.templates[tplName] ?: continue
-            if (query in tpl.appList) return !appConfig.useWhitelist
+        for (templateName in appConfig.applyTemplates) {
+            val template = config.templates[templateName] ?: continue
+            if (query in template.appList) return !appConfig.useWhitelist
         }
 
         return appConfig.useWhitelist
     }
 
-    override fun stopService(cleanEnv: Boolean) {
-        logI(TAG, "Stop service")
+    fun addLog(logEntry: String) {
         synchronized(loggerLock) {
-            logcatAvailable = false
-        }
-        synchronized(configLock) {
-            frameworkHooks.forEach(IFrameworkHook::unload)
-            frameworkHooks.clear()
-            if (cleanEnv) {
-                logI(TAG, "Clean runtime environment")
-                File(dataDir).deleteRecursively()
-                return
-            }
-        }
-        instance = null
-    }
-
-    fun addLog(parsedMsg: String) {
-        synchronized(loggerLock) {
-            if (!logcatAvailable) return
+            if (!isLoggingAvailable) return
             if (logFile.length() / 1024 > config.maxLogSize) clearLogs()
-            logFile.appendText(parsedMsg)
+            logFile.appendText(logEntry)
         }
     }
 

@@ -4,6 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?selectableItemBackground"
+    android:baselineAligned="false"
+    android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingHorizontal="@dimen/item_padding_horizontal"
     tools:context="icu.nullptr.hidemyapplist.ui.view.ListItemView">

@@ -1,157 +1,79 @@
 package icu.nullptr.hidemyapplist.ui.fragment
 
-import android.content.Intent
-import android.net.Uri
+import android.content.res.ColorStateList
 import android.os.Bundle
-import android.text.Html
 import android.view.View
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
-import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.FragmentNavigatorExtras
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.google.android.gms.ads.AdRequest
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.transition.MaterialElevationScale
 import com.tsng.hidemyapplist.BuildConfig
 import com.tsng.hidemyapplist.R
 import com.tsng.hidemyapplist.databinding.FragmentHomeBinding
-import icu.nullptr.hidemyapplist.data.fetchLatestUpdate
+import icu.nullptr.hidemyapplist.common.CommonUtils
+import icu.nullptr.hidemyapplist.common.Constants
 import icu.nullptr.hidemyapplist.hmaApp
 import icu.nullptr.hidemyapplist.service.ConfigManager
 import icu.nullptr.hidemyapplist.service.PrefManager
 import icu.nullptr.hidemyapplist.service.ServiceClient
-import icu.nullptr.hidemyapplist.ui.activity.AboutActivity
 import icu.nullptr.hidemyapplist.ui.util.ThemeUtils.getColor
 import icu.nullptr.hidemyapplist.ui.util.ThemeUtils.themeColor
 import icu.nullptr.hidemyapplist.ui.util.makeToast
 import icu.nullptr.hidemyapplist.ui.util.navController
 import icu.nullptr.hidemyapplist.ui.util.setupToolbar
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import icu.nullptr.hidemyapplist.util.SuUtils
 
 class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private val binding by viewBinding<FragmentHomeBinding>()
 
-    private val backupSAFLauncher =
-        registerForActivityResult(CreateDocument("application/json")) backup@{ uri ->
-            if (uri == null) return@backup
-            runCatching {
-                ConfigManager.configFile.inputStream().use { input ->
-                    hmaApp.contentResolver.openOutputStream(uri).use { output ->
-                        if (output == null) throw IOException(getString(R.string.home_export_failed))
-                        input.copyTo(output)
-                    }
-                }
-            }.onSuccess {
-                makeToast(R.string.home_exported)
-            }.onFailure {
-                makeToast(R.string.home_export_failed)
-            }
-        }
-
-    private val restoreSAFLauncher =
-        registerForActivityResult(ActivityResultContracts.GetContent()) restore@{ uri ->
-            if (uri == null) return@restore
-            runCatching {
-                val backup = hmaApp.contentResolver
-                    .openInputStream(uri)?.reader().use { it?.readText() }
-                    ?: throw IOException(getString(R.string.home_import_file_damaged))
-                ConfigManager.importConfig(backup)
-                updateConfigSummary()
-                makeToast(R.string.home_import_successful)
-            }.onFailure {
-                it.printStackTrace()
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(R.string.home_import_failed)
-                    .setMessage(it.message)
-                    .setPositiveButton(android.R.string.ok, null)
-                    .setNegativeButton(R.string.show_crash_log) { _, _ ->
-                        MaterialAlertDialogBuilder(requireActivity())
-                            .setTitle(R.string.home_import_failed)
-                            .setMessage(it.stackTraceToString())
-                            .setPositiveButton(android.R.string.ok, null)
-                            .show()
-                    }
-                    .show()
-            }
-        }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        exitTransition = MaterialElevationScale(false)
-        reenterTransition = MaterialElevationScale(true)
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         setupToolbar(
             toolbar = binding.toolbar,
             title = getString(R.string.app_name),
-            menuRes = R.menu.menu_about,
-            onMenuOptionSelected = {
-                startActivity(Intent(requireContext(), AboutActivity::class.java))
+            menuRes = R.menu.menu_home,
+            onMenuOptionSelected = { item ->
+                if (item.itemId == R.id.menu_settings) {
+                    navController.navigate(R.id.nav_settings)
+                }
             }
         )
 
-        runCatching {
-            binding.adBanner.loadAd(AdRequest.Builder().build())
-        }
         binding.statusCard.setOnClickListener {
             navController.navigate(R.id.nav_logs)
         }
         binding.templateManage.setOnClickListener {
-            val extras = FragmentNavigatorExtras(binding.manageCard to "transition_manage")
-            navController.navigate(R.id.nav_template_manage, null, null, extras)
+            navController.navigate(R.id.nav_template_manage)
         }
         binding.appManage.setOnClickListener {
             navController.navigate(R.id.nav_app_manage)
         }
-        binding.detectionTest.setOnClickListener {
-            val intent = hmaApp.packageManager.getLaunchIntentForPackage("icu.nullptr.applistdetector")
-            if (intent == null) {
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(R.string.home_download_test_app_title)
-                    .setMessage(R.string.home_download_test_app_message)
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .setPositiveButton(android.R.string.ok) { _, _ ->
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Dr-TSNG/ApplistDetector/releases")))
-                    }
-                    .show()
-            } else startActivity(intent)
+        binding.globalHideRow.setOnClickListener {
+            binding.globalHideSwitch.isChecked = !binding.globalHideSwitch.isChecked
         }
-        binding.backupConfig.setOnClickListener {
-            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-            backupSAFLauncher.launch("HMA_Config_$timestamp.json")
+        binding.dataIsolationRow.setOnClickListener {
+            binding.dataIsolationSwitch.isChecked = !binding.dataIsolationSwitch.isChecked
         }
-        binding.restoreConfig.setOnClickListener {
-            restoreSAFLauncher.launch("application/json")
+        binding.forceMountRow.setOnClickListener {
+            binding.forceMountSwitch.isChecked = !binding.forceMountSwitch.isChecked
         }
-
-        lifecycleScope.launch {
-            loadUpdateDialog()
+        binding.globalHideSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (PrefManager.globalHidingEnabled != isChecked) {
+                PrefManager.globalHidingEnabled = isChecked
+                ConfigManager.resyncServiceConfig()
+            }
         }
     }
 
     override fun onStart() {
         super.onStart()
         updateConfigSummary()
+        updateFunctionSummary()
         val serviceVersion = ServiceClient.serviceVersion
         val color = when {
             !hmaApp.isHooked -> getColor(R.color.gray)
             serviceVersion == 0 -> getColor(R.color.invalid)
             else -> themeColor(android.R.attr.colorPrimary)
         }
-        binding.statusCard.setCardBackgroundColor(color)
-        binding.statusCard.outlineAmbientShadowColor = color
-        binding.statusCard.outlineSpotShadowColor = color
+        binding.moduleStatusIcon.imageTintList = ColorStateList.valueOf(color)
         if (hmaApp.isHooked) {
             binding.moduleStatusIcon.setImageResource(R.drawable.outline_done_all_24)
             val versionNameSimple = BuildConfig.VERSION_NAME.substringBefore(".r")
@@ -187,32 +109,37 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         )
     }
 
-    private suspend fun loadUpdateDialog() {
-        if (PrefManager.disableUpdate) return
-        val updateInfo = fetchLatestUpdate() ?: return
-        if (updateInfo.versionCode > BuildConfig.VERSION_CODE) {
-            withContext(Dispatchers.Main) {
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(getString(R.string.home_new_update, updateInfo.versionName))
-                    .setMessage(Html.fromHtml(updateInfo.content, Html.FROM_HTML_MODE_COMPACT))
-                    .setPositiveButton("GitHub") { _, _ ->
-                        startActivity(Intent(Intent.ACTION_VIEW, updateInfo.downloadUrl.toUri()))
-                    }
-                    .setNegativeButton("Telegram") { _, _ ->
-                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/HideMyApplist")))
-                    }
-                    .setNeutralButton(android.R.string.cancel, null)
-                    .show()
+    private fun updateFunctionSummary() {
+        binding.globalHideSwitch.setOnCheckedChangeListener(null)
+        binding.globalHideSwitch.isChecked = PrefManager.globalHidingEnabled
+        binding.globalHideSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (PrefManager.globalHidingEnabled != isChecked) {
+                PrefManager.globalHidingEnabled = isChecked
+                ConfigManager.resyncServiceConfig()
             }
-        } else if (updateInfo.versionCode > PrefManager.lastVersion) {
-            withContext(Dispatchers.Main) {
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(getString(R.string.home_update, updateInfo.versionName))
-                    .setMessage(Html.fromHtml(updateInfo.content, Html.FROM_HTML_MODE_COMPACT))
-                    .setPositiveButton(android.R.string.ok) { _, _ ->
-                        PrefManager.lastVersion = BuildConfig.VERSION_CODE
-                    }
-                    .show()
+        }
+        val dataIsolationEnabled = CommonUtils.isAppDataIsolationEnabled
+        binding.dataIsolationSwitch.setOnCheckedChangeListener(null)
+        binding.dataIsolationSwitch.isChecked = dataIsolationEnabled
+        binding.dataIsolationSummary.setText(
+            if (dataIsolationEnabled) {
+                R.string.home_data_isolation_on_summary
+            } else {
+                R.string.home_data_isolation_off_summary
+            }
+        )
+        binding.dataIsolationSwitch.setOnCheckedChangeListener { _, isChecked ->
+            val property = Constants.ANDROID_APP_DATA_ISOLATION_ENABLED_PROPERTY
+            val result = SuUtils.execPrivileged("setprop $property ${if (isChecked) 1 else 0}")
+            makeToast(if (result) R.string.settings_need_reboot else R.string.settings_permission_denied)
+            updateFunctionSummary()
+        }
+        binding.forceMountRow.visibility = if (dataIsolationEnabled) View.VISIBLE else View.GONE
+        binding.forceMountSwitch.setOnCheckedChangeListener(null)
+        binding.forceMountSwitch.isChecked = ConfigManager.forceMountData
+        binding.forceMountSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (ConfigManager.forceMountData != isChecked) {
+                ConfigManager.forceMountData = isChecked
             }
         }
     }
