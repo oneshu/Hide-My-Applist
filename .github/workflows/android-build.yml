@@ -116,7 +116,7 @@ jobs:
           tag="$(printf '%s\n' "$apk_name" | sed -E 's/^HMA-V([0-9]+(\.[0-9]+)*)\.r([0-9]+)\..*-release\.apk$/v\1-r\3/')"
           test "$tag" != "$apk_name"
 
-          title="$tag ($(git rev-parse --short=7 "$GITHUB_SHA"))"
+          title="$tag (${GITHUB_SHA:0:7})"
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" "$apk" --clobber
           else
