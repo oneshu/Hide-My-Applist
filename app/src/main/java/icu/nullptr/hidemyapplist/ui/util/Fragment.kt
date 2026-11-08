@@ -15,7 +15,7 @@ val Fragment.navController get() = NavHostFragment.findNavController(this)
 
 fun Fragment.setupToolbar(
     toolbar: Toolbar,
-    title: String,
+    title: CharSequence,
     @DrawableRes navigationIcon: Int? = null,
     navigationOnClick: View.OnClickListener? = null,
     @MenuRes menuRes: Int? = null,
