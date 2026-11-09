@@ -36,10 +36,4 @@
             android:title="@string/settings_activity_launch_protection" />
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/settings_about">
-        <Preference
-            android:icon="@drawable/outline_info_24"
-            android:key="about"
-            android:title="@string/title_about" />
-    </PreferenceCategory>
 </PreferenceScreen>

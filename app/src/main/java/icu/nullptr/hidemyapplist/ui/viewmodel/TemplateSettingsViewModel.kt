@@ -17,11 +17,8 @@ class TemplateSettingsViewModel(
             if (modelClass.isAssignableFrom(TemplateSettingsViewModel::class.java)) {
                 val viewModel = TemplateSettingsViewModel(args.name, args.isWhitelist, args.name)
                 args.name?.let {
-                    val appliedPackages = ConfigManager.getTemplateAppliedPackages(it)
                     val templatePackages = ConfigManager.getTemplatePackages(it)
-                    viewModel.appliedPackages.value = appliedPackages
                     viewModel.templatePackages.value = templatePackages
-                    viewModel.originalAppliedPackages.addAll(appliedPackages)
                     viewModel.originalTemplatePackages.addAll(templatePackages)
                 }
                 @Suppress("UNCHECKED_CAST")
@@ -30,14 +27,11 @@ class TemplateSettingsViewModel(
         }
     }
 
-    val appliedPackages = MutableStateFlow<ArrayList<String>>(ArrayList())
     val templatePackages = MutableStateFlow<ArrayList<String>>(ArrayList())
-    private val originalAppliedPackages = ArrayList<String>()
     private val originalTemplatePackages = ArrayList<String>()
 
     fun hasUnsavedChanges(): Boolean {
         return name?.trim().orEmpty() != originalName.orEmpty() ||
-                appliedPackages.value.toSet() != originalAppliedPackages.toSet() ||
                 templatePackages.value.toSet() != originalTemplatePackages.toSet()
     }
 }

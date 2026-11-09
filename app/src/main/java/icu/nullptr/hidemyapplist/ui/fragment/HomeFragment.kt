@@ -5,9 +5,8 @@ import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.tsng.hidemyapplist.BuildConfig
-import com.tsng.hidemyapplist.R
-import com.tsng.hidemyapplist.databinding.FragmentHomeBinding
+import com.oneshu.applistfilter.R
+import com.oneshu.applistfilter.databinding.FragmentHomeBinding
 import icu.nullptr.hidemyapplist.common.CommonUtils
 import icu.nullptr.hidemyapplist.common.Constants
 import icu.nullptr.hidemyapplist.hmaApp
@@ -37,7 +36,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             }
         )
 
-        binding.statusCard.setOnClickListener {
+        binding.logManage.setOnClickListener {
             navController.navigate(R.id.nav_logs)
         }
         binding.templateManage.setOnClickListener {
@@ -45,9 +44,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
         binding.appManage.setOnClickListener {
             navController.navigate(R.id.nav_app_manage)
-        }
-        binding.globalHideRow.setOnClickListener {
-            binding.globalHideSwitch.isChecked = !binding.globalHideSwitch.isChecked
         }
         binding.dataIsolationRow.setOnClickListener {
             binding.dataIsolationSwitch.isChecked = !binding.dataIsolationSwitch.isChecked
@@ -60,6 +56,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 PrefManager.globalHidingEnabled = isChecked
                 ConfigManager.resyncServiceConfig()
             }
+            updateStatusSummary()
         }
     }
 
@@ -67,33 +64,43 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         super.onStart()
         updateConfigSummary()
         updateFunctionSummary()
+        updateStatusSummary()
+        updateLogSummary()
+    }
+
+    private fun updateStatusSummary() {
+        binding.globalHideSwitch.isChecked = PrefManager.globalHidingEnabled
+        if (!PrefManager.globalHidingEnabled) {
+            binding.moduleStatusIcon.imageTintList = ColorStateList.valueOf(getColor(R.color.gray))
+            binding.moduleStatusIcon.setImageResource(R.drawable.outline_extension_off_24)
+            binding.moduleStatus.setText(R.string.home_filter_off)
+            binding.serviceStatus.setText(R.string.home_filter_off_summary)
+            return
+        }
+
         val serviceVersion = ServiceClient.serviceVersion
+        val serviceReady = serviceVersion >= icu.nullptr.hidemyapplist.common.BuildConfig.SERVICE_VERSION
         val color = when {
-            !hmaApp.isHooked -> getColor(R.color.gray)
-            serviceVersion == 0 -> getColor(R.color.invalid)
+            !hmaApp.isHooked || !serviceReady -> getColor(R.color.invalid)
             else -> themeColor(android.R.attr.colorPrimary)
         }
         binding.moduleStatusIcon.imageTintList = ColorStateList.valueOf(color)
-        if (hmaApp.isHooked) {
-            binding.moduleStatusIcon.setImageResource(R.drawable.outline_done_all_24)
-            val versionNameSimple = BuildConfig.VERSION_NAME.substringBefore(".r")
-            binding.moduleStatus.text = getString(R.string.home_xposed_activated, versionNameSimple, BuildConfig.VERSION_CODE)
-        } else {
-            binding.moduleStatusIcon.setImageResource(R.drawable.outline_extension_off_24)
-            binding.moduleStatus.setText(R.string.home_xposed_not_activated)
-        }
-        if (serviceVersion != 0) {
-            if (serviceVersion < icu.nullptr.hidemyapplist.common.BuildConfig.SERVICE_VERSION) {
-                binding.serviceStatus.text = getString(R.string.home_xposed_service_old)
+        binding.moduleStatusIcon.setImageResource(
+            if (hmaApp.isHooked && serviceReady) {
+                R.drawable.outline_done_all_24
             } else {
-                binding.serviceStatus.text = getString(R.string.home_xposed_service_on, serviceVersion)
+                R.drawable.outline_extension_off_24
             }
-            binding.filterCount.visibility = View.VISIBLE
-            binding.filterCount.text = getString(R.string.home_xposed_filter_count, ServiceClient.filterCount)
-        } else {
-            binding.serviceStatus.setText(R.string.home_xposed_service_off)
-            binding.filterCount.visibility = View.GONE
-        }
+        )
+        binding.moduleStatus.setText(R.string.home_filter_on)
+        binding.serviceStatus.setText(
+            when {
+                !hmaApp.isHooked -> R.string.home_filter_on_module_missing
+                serviceVersion == 0 -> R.string.home_filter_on_service_missing
+                !serviceReady -> R.string.home_filter_on_service_old
+                else -> R.string.home_filter_on_ready
+            }
+        )
     }
 
     private fun updateConfigSummary() {
@@ -109,15 +116,16 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         )
     }
 
-    private fun updateFunctionSummary() {
-        binding.globalHideSwitch.setOnCheckedChangeListener(null)
-        binding.globalHideSwitch.isChecked = PrefManager.globalHidingEnabled
-        binding.globalHideSwitch.setOnCheckedChangeListener { _, isChecked ->
-            if (PrefManager.globalHidingEnabled != isChecked) {
-                PrefManager.globalHidingEnabled = isChecked
-                ConfigManager.resyncServiceConfig()
-            }
+    private fun updateLogSummary() {
+        binding.logManage.summary = if (ServiceClient.serviceVersion != 0) {
+            getString(R.string.home_log_summary_count, ServiceClient.filterCount)
+        } else {
+            getString(R.string.home_log_summary)
         }
+    }
+
+    private fun updateFunctionSummary() {
+        binding.globalHideSwitch.isChecked = PrefManager.globalHidingEnabled
         val dataIsolationEnabled = CommonUtils.isAppDataIsolationEnabled
         binding.dataIsolationSwitch.setOnCheckedChangeListener(null)
         binding.dataIsolationSwitch.isChecked = dataIsolationEnabled
@@ -137,10 +145,22 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         binding.forceMountRow.visibility = if (dataIsolationEnabled) View.VISIBLE else View.GONE
         binding.forceMountSwitch.setOnCheckedChangeListener(null)
         binding.forceMountSwitch.isChecked = ConfigManager.forceMountData
+        updateForceMountSummary()
         binding.forceMountSwitch.setOnCheckedChangeListener { _, isChecked ->
             if (ConfigManager.forceMountData != isChecked) {
                 ConfigManager.forceMountData = isChecked
             }
+            updateForceMountSummary()
         }
+    }
+
+    private fun updateForceMountSummary() {
+        binding.forceMountSummary.setText(
+            if (ConfigManager.forceMountData) {
+                R.string.home_force_mount_data_on_summary
+            } else {
+                R.string.home_force_mount_data_off_summary
+            }
+        )
     }
 }

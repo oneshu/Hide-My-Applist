@@ -22,7 +22,7 @@ val gitCommitHash = "git rev-parse --verify --short HEAD".execute()
 val androidSdkVer by extra(36)
 
 val appVerName by extra("3.4")
-val configVerCode by extra(90)
+val configVerCode by extra(91)
 val serviceVerCode by extra(98)
 val minBackupVerCode by extra(65)
 

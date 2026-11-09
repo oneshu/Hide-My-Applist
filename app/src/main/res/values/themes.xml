@@ -35,11 +35,6 @@
 
     <style name="Theme" parent="Base.AppTheme" />
 
-    <style name="AppTheme.About" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">#154A74</item>
-        <item name="colorPrimaryDark">#154A74</item>
-    </style>
-
     <style name="AppTheme.SideImage">
         <item name="android:layout_width">@dimen/vector_icon_size</item>
         <item name="android:layout_height">@dimen/vector_icon_size</item>

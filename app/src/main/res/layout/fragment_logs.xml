@@ -38,7 +38,7 @@
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:padding="24dp"
-                android:text="@string/home_xposed_service_off"
+                android:text="@string/logs_service_unavailable"
                 android:textAppearance="?textAppearanceTitleMedium"
                 android:visibility="gone" />
         </FrameLayout>

@@ -13,7 +13,7 @@
 
     <PreferenceCategory
         android:dependency="hideEnabled"
-        android:title="@string/app_hide_options">
+        android:title="@string/app_mode_section">
         <icu.nullptr.hidemyapplist.ui.preference.WorkModePreference
             android:key="workMode" />
     </PreferenceCategory>
@@ -21,18 +21,18 @@
     <PreferenceCategory
         android:dependency="hideEnabled"
         android:key="ruleConfigCategory"
-        android:title="@string/app_rule_config_hidden">
+        android:title="@string/app_rule_config_section">
         <SwitchPreference
-            android:icon="@drawable/baseline_call_split_24"
-            android:key="excludeSystemApps"
-            android:title="@string/app_exclude_system_apps" />
+            android:icon="@drawable/outline_android_24"
+            android:key="allowSystemApps"
+            android:title="@string/app_allow_system_apps" />
         <Preference
             android:icon="@drawable/outline_assignment_24"
-            android:key="applyTemplates"
-            android:title="@string/app_templates" />
+            android:key="templateSource"
+            android:title="@string/app_template_entry_title" />
         <Preference
             android:icon="@drawable/baseline_apps_24"
-            android:key="extraAppList"
-            android:title="@string/app_extra_apps_title" />
+            android:key="appList"
+            android:title="@string/app_blacklist_list_title" />
     </PreferenceCategory>
 </PreferenceScreen>

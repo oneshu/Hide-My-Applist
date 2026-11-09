@@ -7,7 +7,7 @@ import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.StyleRes
 import androidx.fragment.app.Fragment
-import com.tsng.hidemyapplist.R
+import com.oneshu.applistfilter.R
 
 object ThemeUtils {
 

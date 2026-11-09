@@ -10,8 +10,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.tsng.hidemyapplist.R
-import com.tsng.hidemyapplist.databinding.FragmentTemplateSettingsBinding
+import com.oneshu.applistfilter.R
+import com.oneshu.applistfilter.databinding.FragmentTemplateSettingsBinding
 import icu.nullptr.hidemyapplist.service.ConfigManager
 import icu.nullptr.hidemyapplist.ui.util.navController
 import icu.nullptr.hidemyapplist.ui.util.setupToolbar
@@ -74,7 +74,6 @@ class TemplateSettingsFragment : Fragment(R.layout.fragment_template_settings) {
     private fun saveResult(delete: Boolean) {
         setFragmentResult("template_settings", Bundle().apply {
             putString("name", if (delete) null else viewModel.name)
-            putStringArrayList("appliedPackages", viewModel.appliedPackages.value)
             putStringArrayList("templatePackages", viewModel.templatePackages.value)
         })
         navController.navigateUp()
@@ -106,11 +105,11 @@ class TemplateSettingsFragment : Fragment(R.layout.fragment_template_settings) {
             if (viewModel.isWhitelist) R.string.template_target_whitelist_title
             else R.string.template_target_blacklist_title
         )
-        binding.appliedPackages.text = getString(R.string.template_scope_title)
         binding.templatePackages.setOnClickListener {
             setFragmentResultListener("app_select") { _, bundle ->
-                viewModel.templatePackages.value =
-                    bundle.getStringArrayList("selectedPackages")!!
+                val selectedPackages = bundle.getStringArrayList("selectedPackages")
+                    ?: return@setFragmentResultListener
+                viewModel.templatePackages.value = selectedPackages
                 clearFragmentResultListener("app_select")
             }
             val args = ScopeFragmentArgs(
@@ -123,36 +122,13 @@ class TemplateSettingsFragment : Fragment(R.layout.fragment_template_settings) {
             )
             navController.navigate(R.id.nav_scope, args.toBundle())
         }
-        binding.appliedPackages.setOnClickListener {
-            setFragmentResultListener("app_select") { _, bundle ->
-                viewModel.appliedPackages.value =
-                    bundle.getStringArrayList("selectedPackages")!!
-                clearFragmentResultListener("app_select")
-            }
-            val args = ScopeFragmentArgs(
-                filterOnlyEnabled = true,
-                isWhitelist = viewModel.isWhitelist,
-                selectedPackages = viewModel.appliedPackages.value.toTypedArray(),
-                title = getString(R.string.template_scope_picker_title)
-            )
-            navController.navigate(R.id.nav_scope, args.toBundle())
-        }
 
         lifecycleScope.launch {
             viewModel.templatePackages.collect {
                 val fmt =
                     if (viewModel.isWhitelist) R.string.template_apps_visible_count
                     else R.string.template_apps_invisible_count
-                binding.templatePackages.summary = String.format(getString(fmt), it.size)
-            }
-        }
-        lifecycleScope.launch {
-            viewModel.appliedPackages.collect {
-                binding.appliedPackages.summary = if (it.isEmpty()) {
-                    getString(R.string.template_not_applied)
-                } else {
-                    String.format(getString(R.string.template_applied_count), it.size)
-                }
+                binding.templatePackages.summary = getString(fmt, it.size)
             }
         }
     }

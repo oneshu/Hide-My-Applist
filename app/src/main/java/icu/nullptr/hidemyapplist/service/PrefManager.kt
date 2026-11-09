@@ -14,7 +14,6 @@ object PrefManager {
 
     private const val PREF_HIDE_ICON = "hide_icon"
     private const val PREF_GLOBAL_HIDING_ENABLED = "global_hiding_enabled"
-    private const val PREF_APP_FILTER_SHOW_SYSTEM = "app_filter_show_system"
     private const val PREF_LOG_FILTER_LEVEL = "log_filter_level"
 
     private val pref = hmaApp.getSharedPreferences("settings", MODE_PRIVATE)
@@ -31,7 +30,7 @@ object PrefManager {
         get() = pref.getBoolean(PREF_HIDE_ICON, false)
         set(value) {
             pref.edit().putBoolean(PREF_HIDE_ICON, value).apply()
-            val component = ComponentName(hmaApp, "com.tsng.hidemyapplist.MainActivityLauncher")
+            val component = ComponentName(hmaApp, "com.oneshu.applistfilter.MainActivityLauncher")
             val status =
                 if (value) PackageManager.COMPONENT_ENABLED_STATE_DISABLED
                 else PackageManager.COMPONENT_ENABLED_STATE_ENABLED
@@ -41,10 +40,6 @@ object PrefManager {
     var globalHidingEnabled: Boolean
         get() = pref.getBoolean(PREF_GLOBAL_HIDING_ENABLED, true)
         set(value) = pref.edit().putBoolean(PREF_GLOBAL_HIDING_ENABLED, value).apply()
-
-    var showSystemApps: Boolean
-        get() = pref.getBoolean(PREF_APP_FILTER_SHOW_SYSTEM, false)
-        set(value) = pref.edit().putBoolean(PREF_APP_FILTER_SHOW_SYSTEM, value).apply()
 
     var logFilterLevel: Int
         get() = pref.getInt(PREF_LOG_FILTER_LEVEL, 0)

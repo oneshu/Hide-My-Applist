@@ -68,28 +68,5 @@
             app:buttonText="@string/edit_list"
             app:icon="@drawable/baseline_apps_24" />
 
-        <com.google.android.material.textview.MaterialTextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="@dimen/item_padding_horizontal"
-            android:paddingTop="12dp"
-            android:text="@string/template_scope_section"
-            android:textAppearance="?textAppearanceTitleSmall"
-            android:textColor="?colorPrimary" />
-
-        <com.google.android.material.textview.MaterialTextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="@dimen/item_padding_horizontal"
-            android:text="@string/template_scope_hint"
-            android:textAppearance="?textAppearanceBodySmall"
-            android:textColor="?android:attr/textColorSecondary" />
-
-        <icu.nullptr.hidemyapplist.ui.view.ListItemView
-            android:id="@+id/applied_packages"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:buttonText="@string/edit_list"
-            app:icon="@drawable/outline_android_24" />
     </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

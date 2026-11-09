@@ -1,6 +1,7 @@
 package icu.nullptr.hidemyapplist.ui.adapter
 
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import icu.nullptr.hidemyapplist.service.ConfigManager
 import icu.nullptr.hidemyapplist.ui.view.AppItemView
 
@@ -11,7 +12,10 @@ class AppManageAdapter(
     inner class ViewHolder(view: AppItemView) : AppSelectAdapter.ViewHolder(view) {
         init {
             view.setOnClickListener {
-                onItemClickListener.invoke(visiblePackages[absoluteAdapterPosition])
+                val position = absoluteAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onItemClickListener.invoke(visiblePackages[position])
+                }
             }
         }
 

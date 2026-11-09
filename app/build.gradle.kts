@@ -11,7 +11,11 @@ plugins {
 }
 
 android {
-    namespace = "com.tsng.hidemyapplist"
+    namespace = "com.oneshu.applistfilter"
+
+    defaultConfig {
+        applicationId = "com.oneshu.applistfilter"
+    }
 
     buildFeatures {
         buildConfig = true
@@ -80,9 +84,8 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.preference.ktx)
+    implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.swiperefreshlayout)
-    implementation(libs.com.drakeet.about)
-    implementation(libs.com.drakeet.multitype)
     implementation(libs.com.github.kirich1409.viewbindingpropertydelegate)
     implementation(libs.com.github.topjohnwu.libsu.core)
     implementation(libs.com.google.android.material)

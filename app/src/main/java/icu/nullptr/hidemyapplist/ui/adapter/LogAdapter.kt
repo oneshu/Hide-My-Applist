@@ -5,8 +5,8 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.tsng.hidemyapplist.R
-import com.tsng.hidemyapplist.databinding.LogItemViewBinding
+import com.oneshu.applistfilter.R
+import com.oneshu.applistfilter.databinding.LogItemViewBinding
 import icu.nullptr.hidemyapplist.service.PrefManager
 import java.util.regex.Pattern
 

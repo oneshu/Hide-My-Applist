@@ -1,80 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Hide My Applist</string>
+    <string name="app_name">App List Filter</string>
 
     <string name="title_home">Home</string>
     <string name="title_logs">Logs</string>
     <string name="title_settings">Settings</string>
     <string name="title_template_manage">Template manage</string>
     <string name="title_template_settings">Template settings</string>
-    <string name="title_app_manage">App manage</string>
+    <string name="title_app_manage">App configuration</string>
     <string name="title_app_select">Select apps</string>
     <string name="title_app_settings">App settings</string>
-    <string name="title_about">About</string>
-
-    <string name="do_not_dual">Do not install HMA to secondary user</string>
+    <string name="do_not_dual">Do not use multiple instances or install App List Filter for another user</string>
     <string name="config_damaged">Config file damaged. Please clean the app data</string>
     <string name="edit_list">Edit list</string>
     <string name="save">Save</string>
     <string name="delete">Delete</string>
-    <string name="work_mode">Mode</string>
     <string name="blacklist">Blacklist</string>
     <string name="whitelist">Whitelist</string>
     <string name="app_blacklist_mode">Blacklist</string>
     <string name="app_whitelist_mode">Whitelist</string>
-    <string name="application">Application</string>
-    <string name="preferences">Preferences</string>
     <string name="refresh">Refresh</string>
     <string name="filter">Filter</string>
-    <string name="yes">Yes</string>
-    <string name="no">No</string>
     <string name="search">Search</string>
-    <string name="system">System</string>
 
     <!-- Home -->
-    <string name="home_xposed_activated">Module Activated [%1$s-%2$d]</string>
-    <string name="home_xposed_not_activated">Module Not Activated</string>
-    <string name="home_xposed_service_on">System service running [%d]</string>
-    <string name="home_xposed_service_off">System service not running</string>
-    <string name="home_xposed_service_old">Module updated, need reboot</string>
-    <string name="home_xposed_filter_count">%d queries blocked · Tap to view logs</string>
+    <string name="home_filter_on">Filtering is on</string>
+    <string name="home_filter_off">Filtering is off</string>
+    <string name="home_filter_on_ready">Module loaded · system service running</string>
+    <string name="home_filter_on_module_missing">Module not loaded · filtering unavailable</string>
+    <string name="home_filter_on_service_missing">Module loaded · system service not running</string>
+    <string name="home_filter_on_service_old">Module loaded · system service needs an update</string>
+    <string name="home_filter_off_summary">All apps can read the complete list for now</string>
+    <string name="home_log_summary">View filtering records</string>
+    <string name="home_log_summary_count">%d filters applied · View records</string>
     <string name="home_template_count">%1$d templates</string>
     <string name="home_no_templates">No templates yet</string>
+    <string name="home_template">Templates</string>
     <string name="home_app_count">%1$d apps configured</string>
-    <string name="home_features">Features</string>
-    <string name="home_global_hide">HMA hiding</string>
-    <string name="home_global_hide_summary">Turns off hiding while keeping templates and app rules</string>
-    <string name="home_data_isolation_on_summary">On — blocks access to other apps’ data directories</string>
-    <string name="home_data_isolation_off_summary">Off — app data directories are not restricted</string>
-    <string name="home_force_mount_data">Isolate older apps too</string>
-    <string name="home_force_mount_data_summary">Also isolates apps targeting API below 30</string>
+    <string name="home_global_hide">App List Filter</string>
+    <string name="home_data_isolation">Android/data isolation</string>
+    <string name="home_data_isolation_on_summary">On — blocks access to other apps’ Android/data</string>
+    <string name="home_data_isolation_off_summary">Off — allows access to other apps’ Android/data</string>
+    <string name="home_force_mount_data">Early app Android/data isolation</string>
+    <string name="home_force_mount_data_on_summary">On — Android 10 and earlier apps are restricted too</string>
+    <string name="home_force_mount_data_off_summary">Off — early apps are not forcibly restricted</string>
     <string name="feature_enabled">Enabled</string>
-    <string name="feature_disabled">Disabled</string>
 
     <!-- App select -->
-    <string name="list_show_system">Show system apps</string>
 
     <!-- Template manage -->
-    <string name="template_usage_hint">Blacklist templates hide the selected apps. Whitelist templates keep only the selected apps visible. A template takes effect only after it is applied to an app.</string>
+    <string name="template_usage_hint">Applying a template copies its current list. Later template edits do not affect configured apps.</string>
     <string name="template_create">New template</string>
     <string name="template_type_choose_title">Choose template type</string>
     <string name="template_type_blacklist_option">Blacklist — hide only the selected apps</string>
     <string name="template_type_whitelist_option">Whitelist — show only the selected apps</string>
     <string name="next">Next</string>
     <string name="template_content_section">Template content</string>
-    <string name="template_scope_section">App scope</string>
-    <string name="template_scope_hint">Apps in this scope use the template to filter the app list they can access.</string>
     <string name="template_target_blacklist_title">Apps to hide</string>
     <string name="template_target_whitelist_title">Apps to keep visible</string>
-    <string name="template_scope_title">Apps this template applies to</string>
     <string name="template_target_blacklist_picker_title">Select apps to hide</string>
     <string name="template_target_whitelist_picker_title">Select apps to keep visible</string>
-    <string name="template_scope_picker_title">Select apps this template applies to</string>
-    <string name="template_list_blacklist_summary">Hides %1$d apps · %2$s</string>
-    <string name="template_list_whitelist_summary">Keeps %1$d apps visible · %2$s</string>
-    <string name="template_not_applied">Not applied</string>
-    <string name="selection_count">%1$d selected</string>
+    <string name="template_list_blacklist_summary">Hide %1$d apps</string>
+    <string name="template_list_whitelist_summary">Keep %1$d apps visible</string>
+    <string name="selection_count">%1$d apps selected</string>
     <string name="selection_clear">Clear</string>
+    <string name="selection_save_as_template">Save as template</string>
     <string name="selection_done">Done</string>
     <string name="selection_discard_title">Discard selection?</string>
     <string name="selection_discard_message">The selected apps have not been confirmed.</string>
@@ -88,34 +78,46 @@
     <string name="template_discard_title">Discard changes?</string>
     <string name="template_discard_message">The template has unsaved changes. Discard them?</string>
     <string name="template_discard">Discard</string>
-    <string name="template_applied_count">Applied to %d apps</string>
     <string name="template_apps_visible_count">%d apps visible</string>
     <string name="template_apps_invisible_count">%d apps invisible</string>
 
     <!-- App settings -->
-    <string name="app_enable_hide">Enable hiding</string>
-    <string name="app_enable_on">On</string>
-    <string name="app_enable_off">Off</string>
-    <string name="app_hide_options">Hiding method</string>
-    <string name="work_mode_blacklist_card_summary">Hide listed apps</string>
-    <string name="work_mode_whitelist_card_summary">Show listed apps only</string>
-    <string name="work_mode_blacklist_summary">Hide apps in the list; keep apps outside it visible</string>
-    <string name="work_mode_whitelist_summary">Show only apps in the list; hide every other app</string>
+    <string name="app_enable_hide">Filter app list</string>
+    <string name="app_enable_on">On · restricts this app’s app-list access</string>
+    <string name="app_enable_off">Off · this app can read the app list</string>
+    <string name="app_mode_section">Protection mode</string>
+    <string name="work_mode_blacklist_card_summary">Hide selected apps; show everything else</string>
+    <string name="work_mode_whitelist_card_summary">Show selected apps only; hide everything else</string>
     <string name="work_mode_switch_title">Switch hiding method</string>
-    <string name="work_mode_switch_message">Switching methods clears the current list; choose templates and extra apps again.</string>
+    <string name="work_mode_switch_message">Switching methods clears this app’s selection. Existing templates are unchanged.</string>
     <string name="work_mode_switch_confirm">Clear and switch</string>
-    <string name="app_rule_config_hidden">Select apps to hide</string>
-    <string name="app_rule_config_visible">Select apps to show</string>
-    <string name="app_templates">Choose from a template</string>
-    <string name="app_templates_none">Use a saved group of apps</string>
-    <string name="app_template_names_separator">, </string>
-    <string name="app_choose_template">Choose template</string>
-    <string name="app_exclude_system_apps">Keep all system apps visible</string>
-    <string name="app_extra_apps_title">Select apps individually</string>
-    <string name="app_extra_apps_visible_title">Select apps to allow</string>
-    <string name="app_extra_apps_invisible_title">Select apps to hide</string>
-    <string name="app_extra_apps_none">Only for this configuration; template unchanged</string>
-    <string name="app_extra_apps_selected">%d · only for this configuration</string>
+    <string name="app_rule_config_section">Rules</string>
+    <string name="app_allow_system_apps">Allow system apps</string>
+    <string name="app_allow_system_on">Keeps system components visible to prevent crashes</string>
+    <string name="app_allow_system_off">System apps follow the whitelist and may cause crashes</string>
+    <string name="app_template_entry_title">Apply template</string>
+    <string name="app_templates_none">Not selected</string>
+    <string name="app_template_applied">Applied: %1$s</string>
+    <string name="app_template_applied_modified">Applied: %1$s (edited)</string>
+    <string name="app_template_hide_all_users">Show no user apps</string>
+    <string name="app_no_matching_templates">No matching templates. Create one in Templates first.</string>
+    <string name="app_blacklist_list_title">Apps to hide</string>
+    <string name="app_whitelist_list_title">Apps allowed to remain visible</string>
+    <string name="app_blacklist_empty">Not selected · all apps stay visible</string>
+    <string name="app_blacklist_selected">%d apps selected</string>
+    <string name="app_whitelist_empty_system_allowed">Not selected · all user apps are hidden</string>
+    <string name="app_whitelist_empty_system_hidden">Not selected · only this app and required system components remain</string>
+    <string name="app_whitelist_selected_system_allowed">%d apps selected · system apps visible</string>
+    <string name="app_whitelist_selected_system_hidden">%d apps selected · system apps not allowed</string>
+    <string name="app_blacklist_picker_title">Select apps to hide</string>
+    <string name="app_whitelist_picker_title">Select apps allowed to remain visible</string>
+    <string name="app_tab_user">User apps (%1$d)</string>
+    <string name="app_tab_system">System apps (%1$d)</string>
+    <string name="app_system_apps_auto_visible">“Allow system apps” is on; no manual selection is needed.</string>
+    <string name="app_save_template_title">Save as template</string>
+    <string name="app_save_template_hint">Template name</string>
+    <string name="app_save_template_saved">Template saved</string>
+    <string name="app_choose_template">Apply template</string>
 
     <!-- Logs -->
     <string name="logs_save">Save full logs</string>
@@ -123,28 +125,29 @@
     <string name="logs_empty">No logs to save</string>
     <string name="logs_saved">Logs saved</string>
     <string name="logs_save_failed">Could not save the log file</string>
+    <string name="logs_service_unavailable">System service not running</string>
     <string name="logs_source_system_service">System service</string>
     <string name="logs_source_module_service">Module service</string>
     <string name="logs_source_module_loader">Module loader</string>
-    <string name="logs_source_app_filter">App-list filter</string>
+    <string name="logs_source_app_filter">App List Filter</string>
     <string name="logs_source_activity_filter">App launch protection</string>
     <string name="logs_source_data_isolation">App data isolation</string>
     <string name="logs_source_other">Other</string>
     <string name="logs_event_data_ready">The system service prepared its runtime data.</string>
     <string name="logs_event_config_missing">No configuration was found. Default settings will be used.</string>
-    <string name="logs_event_config_loaded">Hidden-app rules were loaded.</string>
+    <string name="logs_event_config_loaded">App List Filter rules were loaded.</string>
     <string name="logs_event_hook_loaded">App-list filtering was enabled.</string>
     <string name="logs_event_data_isolation_enabled">App data isolation is enabled.</string>
     <string name="logs_event_data_isolation_disabled">App data isolation is disabled.</string>
     <string name="logs_event_hooks_installed">All filtering components are running.</string>
-    <string name="logs_event_service_started">The hidden-app system service started.</string>
+    <string name="logs_event_service_started">The App List Filter system service started.</string>
     <string name="logs_event_user_service_started">The module service started.</string>
-    <string name="logs_event_app_connected">The management app connected to the hidden-app service.</string>
+    <string name="logs_event_app_connected">The management app connected to the App List Filter service.</string>
     <string name="logs_event_observer_started">The system service started listening for app-list requests.</string>
     <string name="logs_event_client_connected">The management app connected (UID %1$s).</string>
     <string name="logs_event_module_injected">The module was loaded into the system framework.</string>
     <string name="logs_event_pms_connected">Connected to the system package manager.</string>
-    <string name="logs_event_service_initializing">Starting hidden-app service version %1$s.</string>
+    <string name="logs_event_service_initializing">Starting App List Filter service version %1$s.</string>
     <string name="logs_event_signature_mismatch">The module signature does not match, so the service was stopped.</string>
     <string name="logs_event_provider_failed">Could not connect to the configuration provider.</string>
     <string name="logs_event_binder_failed">Could not connect the management app to the module service.</string>
@@ -174,7 +177,6 @@
     <string name="settings_language">Language</string>
     <string name="settings_general">General</string>
     <string name="settings_module">Module</string>
-    <string name="settings_about">About</string>
     <string name="settings_data_isolation">App data isolation</string>
     <string name="settings_need_reboot">System restart required to apply</string>
     <string name="settings_permission_denied">Permission denied</string>
@@ -182,18 +184,4 @@
     <string name="theme_follow_system">Follow system</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
-    <!-- About -->
-    <string name="about_description">
-        Although It is incorrect to detect specific app installation, yet not every app using root provides random package name support. In this case, detected apps that use root (such as Fake Location and Storage Isolation) is equal to detected root itself.\n\nAt the same time, some smart apps use various loopholes to acquire your app list, so that it can draw a persona for you.\n\nThis module provides some methods to test whether you have already hidden your applist nicely. Also, it can work as an Xposed module to hide some apps or reject app list requests to protect your privacy.
-    </string>
-    <string name="about_how_to_use_title">How to use this module</string>
-    <string name="about_how_to_use_description_1">
-        You can create templates in \"Template manage\".\nThen apply the templates to apps in \"App manage\". (You can also select extra apps for targets.)\nYou should and ONLY should check \"System Framework\" in Xposed module scope / whitelist.
-    </string>
-    <string name="about_how_to_use_description_2">
-        Config modification effective in real time.
-    </string>
-    <string name="about_developer">Developer</string>
-    <string name="about_open_source">Open source licenses</string>
-
 </resources>

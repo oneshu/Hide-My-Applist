@@ -2,7 +2,7 @@ package icu.nullptr.hidemyapplist.service
 
 import android.util.Log
 import android.util.AtomicFile
-import com.tsng.hidemyapplist.R
+import com.oneshu.applistfilter.R
 import icu.nullptr.hidemyapplist.common.BuildConfig
 import icu.nullptr.hidemyapplist.common.JsonConfig
 import icu.nullptr.hidemyapplist.hmaApp
@@ -11,14 +11,16 @@ import java.io.File
 
 object ConfigManager {
 
+    const val BUILTIN_HIDE_ALL_USERS = "@builtin:hide-all-users"
+
     data class TemplateInfo(
         val name: String?,
         val isWhitelist: Boolean,
-        val appCount: Int = 0,
-        val appliedCount: Int = 0
+        val appCount: Int = 0
     )
 
     private const val TAG = "ConfigManager"
+    private const val AGGREGATED_RULES_VERSION = 91
     private lateinit var config: JsonConfig
     val configFile = File("${hmaApp.filesDir.absolutePath}/config.json")
     private val atomicConfigFile by lazy { AtomicFile(configFile) }
@@ -31,11 +33,31 @@ object ConfigManager {
             config = JsonConfig.parse(atomicConfigFile.readFully().decodeToString())
             val configVersion = config.configVersion
             if (configVersion < 65) throw RuntimeException("Config version too old")
+            if (configVersion < AGGREGATED_RULES_VERSION) migrateAppRules()
             config.configVersion = BuildConfig.CONFIG_VERSION
             saveConfig()
         }.onFailure {
             makeToast(R.string.config_damaged)
             throw RuntimeException("Config file too old or damaged", it)
+        }
+    }
+
+    private fun migrateAppRules() {
+        config.scope.values.forEach { appConfig ->
+            val templatePackages = appConfig.applyTemplates.flatMapTo(mutableSetOf()) { name ->
+                config.templates[name]?.appList.orEmpty()
+            }
+            appConfig.selectedApps = (
+                appConfig.extraAppList + templatePackages
+            ).toMutableSet()
+            if (appConfig.applyTemplates.size == 1) {
+                appConfig.sourceTemplate = appConfig.applyTemplates.single()
+                appConfig.sourceTemplateApps = templatePackages
+            }
+            appConfig.excludeSystemApps?.let { appConfig.allowSystemApps = it }
+            appConfig.excludeSystemApps = null
+            appConfig.applyTemplates.clear()
+            appConfig.extraAppList.clear()
         }
     }
 
@@ -86,7 +108,7 @@ object ConfigManager {
         }
 
     fun hasTemplate(name: String?): Boolean {
-        return config.templates.containsKey(name)
+        return name == BUILTIN_HIDE_ALL_USERS || config.templates.containsKey(name)
     }
 
     fun getTemplateList(): MutableList<TemplateInfo> {
@@ -94,17 +116,8 @@ object ConfigManager {
             TemplateInfo(
                 name = name,
                 isWhitelist = template.isWhitelist,
-                appCount = template.appList.size,
-                appliedCount = config.scope.count { (_, appConfig) ->
-                    appConfig.applyTemplates.contains(name)
-                }
+                appCount = template.appList.size
             )
-        }
-    }
-
-    fun getTemplateAppliedPackages(name: String): ArrayList<String> {
-        return config.scope.mapNotNullTo(ArrayList()) {
-            if (it.value.applyTemplates.contains(name)) it.key else null
         }
     }
 
@@ -118,14 +131,16 @@ object ConfigManager {
         originalName: String?,
         name: String?,
         isWhitelist: Boolean,
-        appliedPackages: Collection<String>,
         templatePackages: Set<String>
     ) {
         Log.d(TAG, "saveTemplate: $originalName -> $name, packages = $templatePackages")
         if (name == null) {
             originalName ?: return
-            config.scope.forEach { (_, appConfig) ->
-                appConfig.applyTemplates.remove(originalName)
+            config.scope.values.forEach { appConfig ->
+                if (appConfig.sourceTemplate == originalName) {
+                    appConfig.sourceTemplate = null
+                    appConfig.sourceTemplateApps.clear()
+                }
             }
             config.templates.remove(originalName)
             saveConfig()
@@ -134,13 +149,13 @@ object ConfigManager {
 
         if (originalName != null && originalName != name) {
             config.templates.remove(originalName)
-            config.scope.values.forEach { it.applyTemplates.remove(originalName) }
+            config.scope.values.forEach { appConfig ->
+                if (appConfig.sourceTemplate == originalName) {
+                    appConfig.sourceTemplate = name
+                }
+            }
         }
         config.templates[name] = JsonConfig.Template(isWhitelist, templatePackages)
-        config.scope.forEach { (packageName, appConfig) ->
-            if (packageName in appliedPackages) appConfig.applyTemplates.add(name)
-            else appConfig.applyTemplates.remove(name)
-        }
         saveConfig()
     }
 

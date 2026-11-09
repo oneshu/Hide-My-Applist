@@ -102,13 +102,4 @@
             </FrameLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
-
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/work_mode_summary"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:textAppearance="?textAppearanceBodySmall"
-        android:textColor="?android:attr/textColorSecondary"
-        tools:text="@string/work_mode_blacklist_summary" />
 </LinearLayout>

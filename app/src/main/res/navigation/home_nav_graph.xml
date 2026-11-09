@@ -49,8 +49,16 @@
             android:defaultValue="false"
             app:argType="boolean" />
         <argument
+            android:name="systemAppsAllowed"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
             android:name="selectedPackages"
             app:argType="string[]" />
+        <argument
+            android:name="allowSaveAsTemplate"
+            android:defaultValue="false"
+            app:argType="boolean" />
         <argument
             android:name="title"
             app:argType="string" />

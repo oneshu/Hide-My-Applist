@@ -2,7 +2,7 @@ package icu.nullptr.hidemyapplist.ui.adapter
 
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.tsng.hidemyapplist.R
+import com.oneshu.applistfilter.R
 import icu.nullptr.hidemyapplist.service.ConfigManager
 import icu.nullptr.hidemyapplist.ui.view.ListItemView
 import java.text.Collator
@@ -21,7 +21,10 @@ class TemplateAdapter(
     inner class ViewHolder(view: ListItemView) : RecyclerView.ViewHolder(view) {
         init {
             view.setOnClickListener {
-                onClickListener?.invoke(list[absoluteAdapterPosition])
+                val position = absoluteAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onClickListener?.invoke(list[position])
+                }
             }
         }
 
@@ -37,9 +40,7 @@ class TemplateAdapter(
                 summary = context.getString(
                     if (info.isWhitelist) R.string.template_list_whitelist_summary
                     else R.string.template_list_blacklist_summary,
-                    info.appCount,
-                    if (info.appliedCount == 0) context.getString(R.string.template_not_applied)
-                    else context.getString(R.string.template_applied_count, info.appliedCount)
+                    info.appCount
                 )
             }
         }

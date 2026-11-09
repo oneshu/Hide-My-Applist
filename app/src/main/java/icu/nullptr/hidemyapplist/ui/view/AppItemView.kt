@@ -5,8 +5,8 @@ import android.util.AttributeSet
 import android.widget.LinearLayout
 import by.kirich1409.viewbindingdelegate.CreateMethod
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.tsng.hidemyapplist.R
-import com.tsng.hidemyapplist.databinding.AppItemViewBinding
+import com.oneshu.applistfilter.R
+import com.oneshu.applistfilter.databinding.AppItemViewBinding
 import icu.nullptr.hidemyapplist.util.PackageHelper
 
 class AppItemView @JvmOverloads constructor(
@@ -35,6 +35,12 @@ class AppItemView @JvmOverloads constructor(
         get() = binding.checkbox.isChecked
         set(value) {
             binding.checkbox.isChecked = value
+        }
+
+    var isCheckboxEnabled: Boolean
+        get() = binding.checkbox.isEnabled
+        set(value) {
+            binding.checkbox.isEnabled = value
         }
 
     constructor(context: Context, isCheckable: Boolean) : this(context) {

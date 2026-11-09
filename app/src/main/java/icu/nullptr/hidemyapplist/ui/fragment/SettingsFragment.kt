@@ -1,23 +1,21 @@
 package icu.nullptr.hidemyapplist.ui.fragment
 
-import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.text.HtmlCompat
+import androidx.core.os.LocaleListCompat
 import androidx.fragment.app.Fragment
-import androidx.preference.Preference
 import androidx.preference.PreferenceDataStore
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.tsng.hidemyapplist.R
-import com.tsng.hidemyapplist.databinding.FragmentSettingsBinding
+import com.oneshu.applistfilter.R
+import com.oneshu.applistfilter.databinding.FragmentSettingsBinding
 import icu.nullptr.hidemyapplist.hmaApp
 import icu.nullptr.hidemyapplist.service.ConfigManager
 import icu.nullptr.hidemyapplist.service.PrefManager
-import icu.nullptr.hidemyapplist.ui.activity.AboutActivity
 import icu.nullptr.hidemyapplist.ui.util.navController
 import icu.nullptr.hidemyapplist.ui.util.setupToolbar
 import icu.nullptr.hidemyapplist.util.LangList
@@ -130,21 +128,19 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
                 true
             }
 
-            findPreference<Preference>("about")?.setOnPreferenceClickListener {
-                startActivity(Intent(requireContext(), AboutActivity::class.java))
-                true
-            }
-
         }
 
         @Suppress("DEPRECATION")
         private fun applyLocale(tag: String) {
-            val locale = hmaApp.getLocale(tag)
-            val config = resources.configuration
-            config.setLocale(locale)
-            LocaleDelegate.defaultLocale = locale
-            hmaApp.resources.updateConfiguration(config, resources.displayMetrics)
-            activity?.recreate()
+            PrefManager.locale = tag
+            LocaleDelegate.defaultLocale = hmaApp.getLocale(tag)
+            AppCompatDelegate.setApplicationLocales(
+                if (tag == "SYSTEM") {
+                    LocaleListCompat.getEmptyLocaleList()
+                } else {
+                    LocaleListCompat.forLanguageTags(tag)
+                }
+            )
         }
     }
 }

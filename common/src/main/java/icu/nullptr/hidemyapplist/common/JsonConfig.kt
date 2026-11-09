@@ -31,7 +31,13 @@ data class JsonConfig(
     @Serializable
     data class AppConfig(
         var useWhitelist: Boolean = false,
-        var excludeSystemApps: Boolean = true,
+        var allowSystemApps: Boolean = true,
+        var selectedApps: MutableSet<String> = mutableSetOf(),
+        var sourceTemplate: String? = null,
+        var sourceTemplateApps: MutableSet<String> = mutableSetOf(),
+
+        // Kept only so existing installations can be migrated without losing rules.
+        var excludeSystemApps: Boolean? = null,
         var applyTemplates: MutableSet<String> = mutableSetOf(),
         var extraAppList: MutableSet<String> = mutableSetOf()
     ) {

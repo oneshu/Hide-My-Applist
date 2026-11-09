@@ -48,9 +48,6 @@
                         android:id="@+id/status_card"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="?selectableItemBackground"
-                        android:clickable="true"
-                        android:focusable="true"
                         android:gravity="center_vertical"
                         android:minHeight="84dp"
                         android:orientation="horizontal"
@@ -76,7 +73,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:textAppearance="?textAppearanceTitleMedium"
-                                tools:text="@string/home_xposed_activated" />
+                                tools:text="@string/home_filter_on" />
 
                             <com.google.android.material.textview.MaterialTextView
                                 android:id="@+id/service_status"
@@ -85,17 +82,18 @@
                                 android:layout_marginTop="2dp"
                                 android:textAppearance="?textAppearanceBodyMedium"
                                 android:textColor="?android:attr/textColorSecondary"
-                                tools:text="@string/home_xposed_service_on" />
+                                tools:text="@string/home_filter_on_ready" />
 
-                            <com.google.android.material.textview.MaterialTextView
-                                android:id="@+id/filter_count"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="5dp"
-                                android:textAppearance="?textAppearanceBodySmall"
-                                android:textColor="?colorPrimary"
-                                tools:text="@string/home_xposed_filter_count" />
                         </LinearLayout>
+
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/global_hide_switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:clickable="true"
+                            android:contentDescription="@string/home_global_hide"
+                            android:focusable="true" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -118,7 +116,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:icon="@drawable/outline_discount_24"
-                        app:text="@string/title_template_manage" />
+                        app:text="@string/home_template" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -157,54 +155,14 @@
                     android:orientation="vertical"
                     android:paddingVertical="4dp">
 
-                <LinearLayout
-                    android:id="@+id/global_hide_row"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="?selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:minHeight="64dp"
-                    android:orientation="horizontal"
-                    android:paddingHorizontal="@dimen/item_padding_horizontal"
-                    android:paddingVertical="8dp">
-
-                    <androidx.appcompat.widget.AppCompatImageView
-                        style="@style/AppTheme.SideImage"
-                        android:importantForAccessibility="no"
-                        app:srcCompat="@drawable/outline_shield_24" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <icu.nullptr.hidemyapplist.ui.view.ListItemView
+                        android:id="@+id/log_manage"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        app:icon="@drawable/outline_bug_report_24"
+                        app:text="@string/title_logs" />
 
-                        <com.google.android.material.textview.MaterialTextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/home_global_hide"
-                            android:textAppearance="?textAppearanceBodyLarge" />
-
-                        <com.google.android.material.textview.MaterialTextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/home_global_hide_summary"
-                            android:textAppearance="?textAppearanceBodySmall"
-                            android:textColor="?android:attr/textColorSecondary" />
-                    </LinearLayout>
-
-                    <com.google.android.material.materialswitch.MaterialSwitch
-                        android:id="@+id/global_hide_switch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:clickable="false"
-                        android:focusable="false" />
-                </LinearLayout>
-
-                <include layout="@layout/line" />
+                    <include layout="@layout/line" />
 
                 <LinearLayout
                     android:id="@+id/data_isolation_row"
@@ -234,7 +192,7 @@
                         <com.google.android.material.textview.MaterialTextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/settings_data_isolation"
+                            android:text="@string/home_data_isolation"
                             android:textAppearance="?textAppearanceBodyLarge" />
 
                         <com.google.android.material.textview.MaterialTextView
@@ -288,9 +246,10 @@
                             android:textAppearance="?textAppearanceBodyLarge" />
 
                         <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/force_mount_summary"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/home_force_mount_data_summary"
+                            android:text="@string/home_force_mount_data_on_summary"
                             android:textAppearance="?textAppearanceBodySmall"
                             android:textColor="?android:attr/textColorSecondary" />
                     </LinearLayout>

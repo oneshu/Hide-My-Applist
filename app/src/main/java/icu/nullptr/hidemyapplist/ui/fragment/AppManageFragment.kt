@@ -1,6 +1,6 @@
 package icu.nullptr.hidemyapplist.ui.fragment
 
-import com.tsng.hidemyapplist.R
+import com.oneshu.applistfilter.R
 import icu.nullptr.hidemyapplist.service.ConfigManager
 import icu.nullptr.hidemyapplist.ui.adapter.AppManageAdapter
 import icu.nullptr.hidemyapplist.ui.util.navController

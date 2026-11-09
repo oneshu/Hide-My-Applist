@@ -18,10 +18,9 @@ androidx-annotation-jvm = { group = "androidx.annotation", name = "annotation-jv
 androidx-navigation-fragment-ktx = { module = "androidx.navigation:navigation-fragment-ktx", version = "2.8.8" }
 androidx-navigation-ui-ktx = { module = "androidx.navigation:navigation-ui-ktx", version = "2.8.8" }
 androidx-preference-ktx = { module = "androidx.preference:preference-ktx", version = "1.2.1" }
+androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version = "1.2.1" }
 androidx-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version = "1.1.0" }
 com-android-tools-build-apksig = { module = "com.android.tools.build:apksig", version.ref = "agp" }
-com-drakeet-about = { module = "com.drakeet.about:about", version = "2.5.2" }
-com-drakeet-multitype = { module = "com.drakeet.multitype:multitype", version = "4.3.0" }
 com-github-kirich1409-viewbindingpropertydelegate = { module = "com.github.kirich1409:viewbindingpropertydelegate", version = "1.5.9" }
 com-github-kyuubiran-ezxhelper = { module = "com.github.kyuubiran:EzXHelper", version = "1.0.3" }
 com-github-topjohnwu-libsu-core = { module = "com.github.topjohnwu.libsu:core", version = "6.0.0" }

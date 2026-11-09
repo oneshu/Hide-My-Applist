@@ -2,12 +2,11 @@ package icu.nullptr.hidemyapplist.ui.preference
 
 import android.content.Context
 import android.util.AttributeSet
-import android.widget.TextView
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.color.MaterialColors
-import com.tsng.hidemyapplist.R
+import com.oneshu.applistfilter.R
 
 class WorkModePreference @JvmOverloads constructor(
     context: Context,
@@ -18,7 +17,6 @@ class WorkModePreference @JvmOverloads constructor(
 
     private var blacklistCard: MaterialCardView? = null
     private var whitelistCard: MaterialCardView? = null
-    private var modeSummary: TextView? = null
     private var modeChangedListener: ((Boolean) -> Unit)? = null
 
     var isWhitelist: Boolean = false
@@ -47,7 +45,6 @@ class WorkModePreference @JvmOverloads constructor(
         super.onBindViewHolder(holder)
         blacklistCard = holder.itemView.findViewById(R.id.mode_blacklist)
         whitelistCard = holder.itemView.findViewById(R.id.mode_whitelist)
-        modeSummary = holder.itemView.findViewById(R.id.work_mode_summary)
         blacklistCard?.setOnClickListener { requestMode(false) }
         whitelistCard?.setOnClickListener { requestMode(true) }
         updateCheckedState()
@@ -56,7 +53,6 @@ class WorkModePreference @JvmOverloads constructor(
     private fun updateCheckedState() {
         updateCard(blacklistCard, !isWhitelist)
         updateCard(whitelistCard, isWhitelist)
-        updateSummary()
     }
 
     private fun updateCard(card: MaterialCardView?, selected: Boolean) {
@@ -77,10 +73,4 @@ class WorkModePreference @JvmOverloads constructor(
         )
     }
 
-    private fun updateSummary() {
-        modeSummary?.setText(
-            if (isWhitelist) R.string.work_mode_whitelist_summary
-            else R.string.work_mode_blacklist_summary
-        )
-    }
 }

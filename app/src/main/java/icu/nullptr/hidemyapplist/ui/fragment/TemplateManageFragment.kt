@@ -8,8 +8,8 @@ import androidx.fragment.app.setFragmentResultListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.tsng.hidemyapplist.R
-import com.tsng.hidemyapplist.databinding.FragmentTemplateManageBinding
+import com.oneshu.applistfilter.R
+import com.oneshu.applistfilter.databinding.FragmentTemplateManageBinding
 import icu.nullptr.hidemyapplist.service.ConfigManager
 import icu.nullptr.hidemyapplist.ui.adapter.TemplateAdapter
 import icu.nullptr.hidemyapplist.ui.util.navController
@@ -56,13 +56,11 @@ class TemplateManageFragment : Fragment(R.layout.fragment_template_manage) {
     private fun navigateToSettings(info: ConfigManager.TemplateInfo) {
         setFragmentResultListener("template_settings") { _, bundle ->
             val name = bundle.getString("name")
-            val appliedPackages = bundle.getStringArrayList("appliedPackages") ?: return@setFragmentResultListener
             val templatePackages = bundle.getStringArrayList("templatePackages") ?: return@setFragmentResultListener
             ConfigManager.saveTemplate(
                 originalName = info.name,
                 name = name,
                 isWhitelist = info.isWhitelist,
-                appliedPackages = appliedPackages,
                 templatePackages = templatePackages.toSet()
             )
             adapter.updateList()

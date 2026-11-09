@@ -6,7 +6,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.navigation.findNavController
-import com.tsng.hidemyapplist.R
+import com.oneshu.applistfilter.R
 import icu.nullptr.hidemyapplist.ui.util.ThemeUtils
 import rikka.material.app.MaterialActivity
 

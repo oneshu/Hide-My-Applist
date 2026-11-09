@@ -11,8 +11,8 @@ import androidx.navigation.fragment.navArgs
 import androidx.preference.*
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.tsng.hidemyapplist.R
-import com.tsng.hidemyapplist.databinding.FragmentSettingsBinding
+import com.oneshu.applistfilter.R
+import com.oneshu.applistfilter.databinding.FragmentSettingsBinding
 import icu.nullptr.hidemyapplist.common.JsonConfig
 import icu.nullptr.hidemyapplist.service.ConfigManager
 import icu.nullptr.hidemyapplist.ui.preference.WorkModePreference
@@ -34,7 +34,7 @@ class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
         val args by navArgs<AppSettingsFragmentArgs>()
         val appConfig = ConfigManager.getAppConfig(args.packageName)
         val state = if (appConfig != null) {
-            AppSettingsViewModel.State(args.packageName, true, appConfig)
+            AppSettingsViewModel.State(args.packageName, true, appConfig.detachedCopy())
         } else {
             AppSettingsViewModel.State(args.packageName, false, JsonConfig.AppConfig())
         }
@@ -43,10 +43,7 @@ class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
 
     private fun currentSnapshot(): SettingsSnapshot {
         val state = viewModel.state
-        val config = state.config.copy(
-            applyTemplates = state.config.applyTemplates.toMutableSet(),
-            extraAppList = state.config.extraAppList.toMutableSet()
-        )
+        val config = state.config.detachedCopy()
         return SettingsSnapshot(state.hideEnabled, config)
     }
 
@@ -102,7 +99,7 @@ class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
         override fun getBoolean(key: String, defValue: Boolean): Boolean {
             return when (key) {
                 "hideEnabled" -> state.hideEnabled
-                "excludeSystemApps" -> state.config.excludeSystemApps
+                "allowSystemApps" -> state.config.allowSystemApps
                 else -> throw IllegalArgumentException("Invalid key: $key")
             }
         }
@@ -110,7 +107,7 @@ class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
         override fun putBoolean(key: String, value: Boolean) {
             when (key) {
                 "hideEnabled" -> state.hideEnabled = value
-                "excludeSystemApps" -> state.config.excludeSystemApps = value
+                "allowSystemApps" -> state.config.allowSystemApps = value
                 else -> throw IllegalArgumentException("Invalid key: $key")
             }
         }
@@ -121,25 +118,47 @@ class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
         private val parent get() = requireParentFragment() as AppSettingsFragment
         private val state get() = parent.viewModel.state
 
-        private fun updateApplyTemplates() {
-            findPreference<Preference>("applyTemplates")?.apply {
-                summary = if (state.config.applyTemplates.isEmpty()) {
-                    getString(R.string.app_templates_none)
-                } else {
-                    state.config.applyTemplates.joinToString(
-                        getString(R.string.app_template_names_separator)
-                    )
-                }
+        private fun updateTemplateSummary() {
+            findPreference<Preference>("templateSource")?.apply {
+                summary = templateSummary()
             }
         }
 
-        private fun updateExtraAppList() {
-            findPreference<Preference>("extraAppList")?.apply {
-                summary = if (state.config.extraAppList.isEmpty()) {
-                    getString(R.string.app_extra_apps_none)
-                } else {
-                    getString(R.string.app_extra_apps_selected, state.config.extraAppList.size)
+        private fun templateName(name: String): String {
+            return if (name == ConfigManager.BUILTIN_HIDE_ALL_USERS) {
+                getString(R.string.app_template_hide_all_users)
+            } else {
+                name
+            }
+        }
+
+        private fun templateSummary(): String {
+            val source = state.config.sourceTemplate ?: return getString(R.string.app_templates_none)
+            val modified = state.config.selectedApps != state.config.sourceTemplateApps
+            return getString(
+                if (modified) R.string.app_template_applied_modified
+                else R.string.app_template_applied,
+                templateName(source)
+            )
+        }
+
+        private fun appListSummary(): String {
+            val selectedCount = state.config.selectedApps.size
+            return if (state.config.useWhitelist) {
+                when {
+                    selectedCount > 0 && state.config.allowSystemApps ->
+                        getString(R.string.app_whitelist_selected_system_allowed, selectedCount)
+                    selectedCount > 0 ->
+                        getString(R.string.app_whitelist_selected_system_hidden, selectedCount)
+                    state.config.allowSystemApps ->
+                        getString(R.string.app_whitelist_empty_system_allowed)
+                    else ->
+                        getString(R.string.app_whitelist_empty_system_hidden)
                 }
+            } else if (selectedCount == 0) {
+                getString(R.string.app_blacklist_empty)
+            } else {
+                getString(R.string.app_blacklist_selected, selectedCount)
             }
         }
 
@@ -151,29 +170,39 @@ class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
             }
         }
 
+        private fun updateSystemAppsSummary() {
+            findPreference<SwitchPreference>("allowSystemApps")?.summary = getString(
+                if (state.config.allowSystemApps) R.string.app_allow_system_on
+                else R.string.app_allow_system_off
+            )
+        }
+
         private fun updateModeDependentPreferences() {
             findPreference<WorkModePreference>("workMode")?.isWhitelist = state.config.useWhitelist
-            findPreference<SwitchPreference>("excludeSystemApps")?.isVisible = state.config.useWhitelist
-            findPreference<PreferenceCategory>("ruleConfigCategory")?.title = getString(
-                if (state.config.useWhitelist) R.string.app_rule_config_visible
-                else R.string.app_rule_config_hidden
+            findPreference<SwitchPreference>("allowSystemApps")?.isVisible =
+                state.config.useWhitelist
+            findPreference<Preference>("appList")?.title = getString(
+                if (state.config.useWhitelist) R.string.app_whitelist_list_title
+                else R.string.app_blacklist_list_title
             )
+            findPreference<Preference>("appList")?.summary = appListSummary()
             updateEnableSummary()
-            updateApplyTemplates()
-            updateExtraAppList()
+            updateSystemAppsSummary()
+            updateTemplateSummary()
         }
 
         private fun applyModeChange(newModeIsWhitelist: Boolean) {
             state.config.useWhitelist = newModeIsWhitelist
-            state.config.applyTemplates.clear()
-            state.config.extraAppList.clear()
+            state.config.selectedApps.clear()
+            state.config.sourceTemplate = null
+            state.config.sourceTemplateApps.clear()
             updateModeDependentPreferences()
         }
 
         private fun requestModeChange(newModeIsWhitelist: Boolean) {
             val modePreference = findPreference<WorkModePreference>("workMode") ?: return
             if (state.config.useWhitelist == newModeIsWhitelist) return
-            if (state.config.applyTemplates.isEmpty() && state.config.extraAppList.isEmpty()) {
+            if (state.config.selectedApps.isEmpty() && state.config.sourceTemplate == null) {
                 applyModeChange(newModeIsWhitelist)
                 return
             }
@@ -205,45 +234,85 @@ class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
                 view?.post { updateModeDependentPreferences() }
                 true
             }
+            findPreference<SwitchPreference>("allowSystemApps")?.setOnPreferenceChangeListener {
+                _, _ -> view?.post { updateModeDependentPreferences() }
+                true
+            }
             findPreference<WorkModePreference>("workMode")?.setOnModeChangedListener(
                 ::requestModeChange
             )
-            findPreference<Preference>("applyTemplates")?.setOnPreferenceClickListener {
-                val templates = ConfigManager.getTemplateList().mapNotNull {
-                    if (it.isWhitelist == state.config.useWhitelist) it.name else null
-                }.toTypedArray()
-                val selectedTemplates = templates.map {
-                    state.config.applyTemplates.contains(it)
-                }.toBooleanArray()
+            findPreference<Preference>("templateSource")?.setOnPreferenceClickListener {
+                val templates = ConfigManager.getTemplateList()
+                    .filter { it.isWhitelist == state.config.useWhitelist }
+                    .mapNotNull { it.name }
+                    .sorted()
+                val labels = buildList {
+                    if (state.config.useWhitelist) {
+                        add(getString(R.string.app_template_hide_all_users))
+                    }
+                    addAll(templates)
+                }
+                if (labels.isEmpty()) {
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle(R.string.app_choose_template)
+                        .setMessage(R.string.app_no_matching_templates)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
+                    return@setOnPreferenceClickListener true
+                }
+                val sourceName = state.config.sourceTemplate
+                val checkedItem = when {
+                    sourceName == ConfigManager.BUILTIN_HIDE_ALL_USERS &&
+                            state.config.useWhitelist -> 0
+                    sourceName != null -> templates.indexOf(sourceName).let {
+                        if (it < 0) -1 else it + if (state.config.useWhitelist) 1 else 0
+                    }
+                    else -> -1
+                }
+                var selectedIndex = checkedItem
                 MaterialAlertDialogBuilder(requireContext())
                     .setTitle(R.string.app_choose_template)
-                    .setMultiChoiceItems(templates, selectedTemplates) { _, index, value ->
-                        selectedTemplates[index] = value
+                    .setSingleChoiceItems(labels.toTypedArray(), checkedItem) { _, index ->
+                        selectedIndex = index
                     }
                     .setNegativeButton(android.R.string.cancel, null)
                     .setPositiveButton(android.R.string.ok) { _, _ ->
-                        state.config.applyTemplates = templates.mapIndexedNotNullTo(mutableSetOf()) { i, name ->
-                            if (selectedTemplates[i]) name else null
+                        if (selectedIndex < 0) return@setPositiveButton
+                        val builtinOffset = if (state.config.useWhitelist) 1 else 0
+                        if (state.config.useWhitelist && selectedIndex == 0) {
+                            state.config.selectedApps.clear()
+                            state.config.sourceTemplate = ConfigManager.BUILTIN_HIDE_ALL_USERS
+                            state.config.sourceTemplateApps.clear()
+                        } else {
+                            val name = templates[selectedIndex - builtinOffset]
+                            val packages = ConfigManager.getTemplatePackages(name)
+                            state.config.selectedApps = packages.toMutableSet()
+                            state.config.sourceTemplate = name
+                            state.config.sourceTemplateApps = packages.toMutableSet()
                         }
-                        updateApplyTemplates()
+                        updateModeDependentPreferences()
                     }
                     .show()
                 true
             }
-            findPreference<Preference>("extraAppList")?.setOnPreferenceClickListener {
+            findPreference<Preference>("appList")?.setOnPreferenceClickListener {
                 parent.setFragmentResultListener("app_select") { _, bundle ->
-                    state.config.extraAppList =
-                        bundle.getStringArrayList("selectedPackages")!!.toMutableSet()
-                    updateExtraAppList()
+                    val selectedPackages =
+                        bundle.getStringArrayList("selectedPackages") ?: return@setFragmentResultListener
+                    state.config.selectedApps = selectedPackages.toMutableSet()
+                    updateModeDependentPreferences()
                     parent.clearFragmentResultListener("app_select")
                 }
 
                 val args = ScopeFragmentArgs(
                     filterOnlyEnabled = false,
-                    selectedPackages = state.config.extraAppList.toTypedArray(),
+                    isWhitelist = state.config.useWhitelist,
+                    systemAppsAllowed = state.config.allowSystemApps,
+                    selectedPackages = state.config.selectedApps.toTypedArray(),
+                    allowSaveAsTemplate = true,
                     title = getString(
-                        if (state.config.useWhitelist) R.string.app_extra_apps_visible_title
-                        else R.string.app_extra_apps_invisible_title
+                        if (state.config.useWhitelist) R.string.app_whitelist_picker_title
+                        else R.string.app_blacklist_picker_title
                     )
                 )
                 parent.navController.navigate(R.id.nav_scope, args.toBundle())
@@ -252,4 +321,11 @@ class AppSettingsFragment : Fragment(R.layout.fragment_settings) {
             updateModeDependentPreferences()
         }
     }
+
+    private fun JsonConfig.AppConfig.detachedCopy() = copy(
+        selectedApps = selectedApps.toMutableSet(),
+        sourceTemplateApps = sourceTemplateApps.toMutableSet(),
+        applyTemplates = applyTemplates.toMutableSet(),
+        extraAppList = extraAppList.toMutableSet()
+    )
 }

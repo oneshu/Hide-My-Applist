@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:textAppearance="?textAppearanceBodyMedium"
-            tools:text="隐藏应用列表服务已启动" />
+            tools:text="应用列表过滤服务已启动" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/raw_details"

@@ -143,13 +143,8 @@ class HMAService(val pms: IPackageManager) : IHMAService.Stub() {
         if ((caller == Constants.GMS_PACKAGE_NAME || caller == Constants.GSF_PACKAGE_NAME) && query == Constants.APP_PACKAGE_NAME) return false // If apply hide on gms, hma app will crash 😓
         if (caller == query) return false
         val appConfig = config.scope[caller] ?: return false
-        if (appConfig.useWhitelist && appConfig.excludeSystemApps && query in systemApps) return false
-
-        if (query in appConfig.extraAppList) return !appConfig.useWhitelist
-        for (templateName in appConfig.applyTemplates) {
-            val template = config.templates[templateName] ?: continue
-            if (query in template.appList) return !appConfig.useWhitelist
-        }
+        if (appConfig.useWhitelist && appConfig.allowSystemApps && query in systemApps) return false
+        if (query in appConfig.selectedApps) return !appConfig.useWhitelist
 
         return appConfig.useWhitelist
     }

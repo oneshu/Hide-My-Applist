@@ -1,6 +1,7 @@
 package icu.nullptr.hidemyapplist.ui.adapter
 
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import icu.nullptr.hidemyapplist.ui.view.AppItemView
 
 class AppScopeAdapter(
@@ -8,6 +9,8 @@ class AppScopeAdapter(
     packageFilter: ((String) -> Boolean)?,
     private val onSelectionChanged: () -> Unit = {},
 ) : AppSelectAdapter(packageFilter) {
+
+    private var selectionLocked = false
 
     private inline var String.isSelected
         get() = this in selectedPackageNames
@@ -18,7 +21,10 @@ class AppScopeAdapter(
     inner class ViewHolder(view: AppItemView) : AppSelectAdapter.ViewHolder(view) {
         init {
             view.setOnClickListener {
-                val packageName = visiblePackages[absoluteAdapterPosition]
+                if (selectionLocked) return@setOnClickListener
+                val position = absoluteAdapterPosition
+                if (position == RecyclerView.NO_POSITION) return@setOnClickListener
+                val packageName = visiblePackages[position]
                 packageName.isSelected = !packageName.isSelected
                 view.isChecked = packageName.isSelected
                 onSelectionChanged()
@@ -28,7 +34,8 @@ class AppScopeAdapter(
         override fun bind(packageName: String) {
             (itemView as AppItemView).let {
                 it.load(packageName)
-                it.isChecked = packageName.isSelected
+                it.isChecked = selectionLocked || packageName.isSelected
+                it.isCheckboxEnabled = !selectionLocked
             }
         }
     }
@@ -43,8 +50,15 @@ class AppScopeAdapter(
     }
 
     fun clearSelection() {
+        if (selectionLocked) return
         selectedPackageNames.clear()
-        notifyDataSetChanged()
+        notifyItemRangeChanged(0, itemCount)
         onSelectionChanged()
+    }
+
+    fun setSelectionLocked(locked: Boolean) {
+        if (selectionLocked == locked) return
+        selectionLocked = locked
+        notifyItemRangeChanged(0, itemCount)
     }
 }

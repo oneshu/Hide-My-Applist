@@ -9,8 +9,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.tsng.hidemyapplist.R
-import com.tsng.hidemyapplist.databinding.FragmentLogsBinding
+import com.oneshu.applistfilter.R
+import com.oneshu.applistfilter.databinding.FragmentLogsBinding
 import icu.nullptr.hidemyapplist.hmaApp
 import icu.nullptr.hidemyapplist.service.PrefManager
 import icu.nullptr.hidemyapplist.service.ServiceClient
@@ -76,6 +76,7 @@ class LogsFragment : Fragment(R.layout.fragment_logs) {
             } else {
                 binding.serviceOff.visibility = View.GONE
                 adapter.logs = logs
+                binding.list.scrollToPosition(0)
             }
         }
     }
@@ -125,6 +126,10 @@ class LogsFragment : Fragment(R.layout.fragment_logs) {
         binding.list.layoutManager = LinearLayoutManager(context)
         binding.list.adapter = adapter
         binding.list.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+    }
+
+    override fun onResume() {
+        super.onResume()
         updateLogs()
     }
 }
